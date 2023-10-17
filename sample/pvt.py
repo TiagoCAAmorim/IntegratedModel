@@ -451,21 +451,21 @@ class PVT:
     def calculate_rs_Standing(self):
         self._check(['dg','p','api','t','gor'])
         x = 0.0125 * self._api - 0.00091 * (1.8 * self._t + 32)
-        y = self._p * pow(10, x)
-        z = 0.1373 * self._dg * pow(y, 1.205)
+        y = self._p * math.pow(10, x)
+        z = 0.1373 * self._dg * math.pow(y, 1.205)
         self._rs = min(z, self._gor)
         
     def calculate_p_bubble_Standing(self):
         self._check(['dg','gor','api','t'])
         x = 0.0125 * self._api - 0.00091 * (1.8 * self._t + 32)
         y = self._gor / self._dg / 0.1373
-        self._p_bubble = pow(y, 1/1.205) * pow(10, -x)
+        self._p_bubble = math.pow(y, 1/1.205) * math.pow(10, -x)
 
     def calculate_p_bubble_Standing_Original(self):
         self._check(['dg','gor','api','t'])
         x = 0.0125 * self._api - 0.00091 * (1.8 * self._t + 32)
         y = 5.615 * self._gor / self._dg
-        z = pow(y, 0.83) * pow(10, -x)
+        z = math.pow(y, 0.83) * math.pow(10, -x)
         self._p_bubble = 1.305 * (z - 1.4)
 
     def calculate_co_bubble_Standing(self, auto=False):
@@ -485,9 +485,9 @@ class PVT:
 
     def calculate_bo_bubble_Standing(self):
         self._check(['dg','do','t','gor'])
-        x = 5.615 * self._gor * pow(self._dg / self._do, 0.5)
+        x = 5.615 * self._gor * math.pow(self._dg / self._do, 0.5)
         y = 1.25 * (1.8 * self._t + 32)
-        self._bo_bubble = 0.9759 +  12E-5 * pow(x + y, 1.2)
+        self._bo_bubble = 0.9759 +  12E-5 * math.pow(x + y, 1.2)
 
     def calculate_bo_Standing(self, auto=False):
         self._check(['p'])
@@ -512,9 +512,9 @@ class PVT:
                     self.calculate_rs_Standing()
             else:
                 self._check(['rs'])
-            x = 5.615 * self._rs * pow(self._dg / self._do, 0.5)
+            x = 5.615 * self._rs * math.pow(self._dg / self._do, 0.5)
             y = 1.25 * (1.8 * self._t + 32)
-            self._bo = 0.9759 +  12E-5 * pow(x + y, 1.2)
+            self._bo = 0.9759 +  12E-5 * math.pow(x + y, 1.2)
 
     def calculate_p_pc_Standing(self):
         self._check(['dg','y_co2','y_h2s','y_n2'])
@@ -558,11 +558,11 @@ class PVT:
         self._check_value(self._t_pr, 1.2, 2.4)
         p = self._p_pr
         t = self._t_pr
-        a = 1.39 * pow(t - 0.92, 0.5) - 0.36 * t - 0.101
-        b = (0.62 - 0.23 * t) * p + ( 0.066/(t - 0.86) -0.037) * p * p + 0.32 / pow(10, 9*(t - 1)) * pow(p,6)
+        a = 1.39 * math.pow(t - 0.92, 0.5) - 0.36 * t - 0.101
+        b = (0.62 - 0.23 * t) * p + ( 0.066/(t - 0.86) -0.037) * p * p + 0.32 / math.pow(10, 9*(t - 1)) * math.pow(p,6)
         c = 0.132 - 0.32 * math.log10(t)
-        d = pow(10, 0.3106 - 0.49 * t + 0.1824 *t * t)
-        self._z = a + (1 - a) / math.exp(b) + c * pow(p, d)
+        d = math.pow(10, 0.3106 - 0.49 * t + 0.1824 *t * t)
+        self._z = a + (1 - a) / math.exp(b) + c * math.pow(p, d)
 
     def calculate_bg(self, auto=False):
         self._check(['p','t'])
@@ -575,9 +575,9 @@ class PVT:
 
     def calculate_uo_do_Standing(self):
         self._check(['t','api'])
-        a = pow(10, 0.43 + 8.33 / self._api)
-        x = 0.32 + 1.8E7 / pow(self._api, 4.53)
-        y = pow(360 / (1.8 * self._t + 232), a)
+        a = math.pow(10, 0.43 + 8.33 / self._api)
+        x = 0.32 + 1.8E7 / math.pow(self._api, 4.53)
+        y = math.pow(360 / (1.8 * self._t + 232), a)
         self._uo_do = x * y
 
     def calculate_uo_Standing(self, auto=False):
@@ -589,8 +589,8 @@ class PVT:
         else:
             self._check(['rs','uo_do'])
         rs = 5.615 * self._rs
-        A = pow(10, rs * (2.2E-7 * rs - 7.4E-4))
-        b = 0.68 / pow(10, 8.62E-5 * rs) + 0.25 / pow(10, 1.1E-3 * rs) + 0.062 / pow(10, 3.74E-3 * rs)
-        self._uo = A * pow(self._uo_do, b)
+        A = math.pow(10, rs * (2.2E-7 * rs - 7.4E-4))
+        b = 0.68 / math.pow(10, 8.62E-5 * rs) + 0.25 / math.pow(10, 1.1E-3 * rs) + 0.062 / math.pow(10, 3.74E-3 * rs)
+        self._uo = A * math.pow(self._uo_do, b)
 
 
