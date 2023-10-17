@@ -20,13 +20,13 @@ def rs_test():
     rs = {40:[], 80:[], 120:[]}
 
     _ = plt.figure() 
-    for rsi in rs.keys():
-        pvt1.set_gor(rsi)
+    for gor in rs.keys():
+        pvt1.set_gor(gor)
         for pi in p:
             pvt1.set_p(pi)
             pvt1.calculate_rs_Standing()
-            rs[rsi].append(pvt1.get_rs())
-        plt.plot(p, rs[rsi])  
+            rs[gor].append(pvt1.get_rs())
+        plt.plot(p, rs[gor])  
 
     ax = plt.gca() 
     ax.legend(['GOR = '+str(i) for i in rs.keys()]) 
@@ -122,12 +122,18 @@ def bo_test():
     for pi in p:
         pvt1.set_p(pi)
         pvt1.calculate_rs_Standing()
-        pvt1.calculate_bo_Standing(auto=True)
+        pvt1.calculate_p_bubble_Standing()
+        pvt1.calculate_co_bubble_Standing()
+        pvt1.calculate_bo_bubble_Standing()
+        pvt1.calculate_bo_Standing()
         bo['light'].append(pvt1.get_bo())
         
         pvt2.set_p(pi)
         pvt2.calculate_rs_Standing()
-        pvt2.calculate_bo_Standing(auto=True)
+        pvt2.calculate_p_bubble_Standing()
+        pvt2.calculate_co_bubble_Standing()
+        pvt2.calculate_bo_bubble_Standing()
+        pvt2.calculate_bo_Standing()
         bo['heavy'].append(pvt2.get_bo())
     _ = plt.figure() 
     plt.plot(p, bo['light'])  
@@ -155,15 +161,21 @@ def z_test():
     steps = 500
     p = [p_init + i/(steps-1)*(p_end - p_init) for i in range(steps)]
     dg = {'dg=0.6':[], 'dg=0.9':[]}
+    pvt1.calculate_p_pc_Standing()
+    pvt1.calculate_t_pc_Standing()
+    pvt1.calculate_t_pr()
+    pvt2.calculate_p_pc_Standing()
+    pvt2.calculate_t_pc_Standing()
+    pvt2.calculate_t_pr()
     for pi in p:
         pvt1.set_p(pi)
-        pvt1.calculate_p_pr(auto=True)
-        pvt1.calculate_z_Standing(auto=True)
+        pvt1.calculate_p_pr()
+        pvt1.calculate_z_Standing()
         dg['dg=0.6'].append(pvt1.get_z())
         
         pvt2.set_p(pi)
-        pvt2.calculate_p_pr(auto=True)
-        pvt2.calculate_z_Standing(auto=True)
+        pvt2.calculate_p_pr()
+        pvt2.calculate_z_Standing()
         dg['dg=0.9'].append(pvt2.get_z())
     _ = plt.figure() 
     plt.plot(p, dg['dg=0.6'])  
@@ -191,17 +203,23 @@ def bg_test():
     steps = 500
     p = [p_init + i/(steps-1)*(p_end - p_init) for i in range(steps)]
     dg = {'dg=0.6':[], 'dg=0.9':[]}
+    pvt1.calculate_p_pc_Standing()
+    pvt1.calculate_t_pc_Standing()
+    pvt1.calculate_t_pr()
+    pvt2.calculate_p_pc_Standing()
+    pvt2.calculate_t_pc_Standing()
+    pvt2.calculate_t_pr()
     for pi in p:
         pvt1.set_p(pi)
-        pvt1.calculate_p_pr(auto=True)
-        pvt1.calculate_z_Standing(auto=True)
-        pvt1.calculate_bg(auto=True)
+        pvt1.calculate_p_pr()
+        pvt1.calculate_z_Standing()
+        pvt1.calculate_bg()
         dg['dg=0.6'].append(pvt1.get_bg())
         
         pvt2.set_p(pi)
-        pvt2.calculate_p_pr(auto=True)
-        pvt2.calculate_z_Standing(auto=True)
-        pvt2.calculate_bg(auto=True)
+        pvt2.calculate_p_pr()
+        pvt2.calculate_z_Standing()
+        pvt2.calculate_bg()
         dg['dg=0.9'].append(pvt2.get_bg())
     _ = plt.figure() 
     plt.plot(p, dg['dg=0.6'])  
@@ -234,7 +252,7 @@ def uo_test():
             pvt1.set_p(pi)
             pvt1.calculate_rs_Standing()
             pvt1.calculate_uo_do_Standing()
-            pvt1.calculate_uo_Standing(auto=True)
+            pvt1.calculate_uo_Standing()
             uo[(gor,t)].append(pvt1.get_uo())
         plt.plot(p, uo[(gor,t)])  
 
@@ -246,11 +264,82 @@ def uo_test():
     plt.title('Uo Using Standing Correlation')  
     save_plot(plt,'uo')
 
+def rhoo_test():
+    pvt1 = pvt.PVT()
+    pvt1.set_api(15.)
+    pvt1.set_dg(0.8)
+    pvt1.set_t(50.)
+
+    p_init = 1
+    p_end = 300
+    steps = 200
+    p = [p_init + i/(steps-1)*(p_end - p_init) for i in range(steps)]
+    rhoo = {20:[], 80:[]}
+
+    _ = plt.figure() 
+    for gor in rhoo.keys():
+        pvt1.set_gor(gor)
+        for pi in p:
+            pvt1.set_p(pi)
+            pvt1.calculate_rs_Standing()
+            pvt1.calculate_p_bubble_Standing()
+            pvt1.calculate_co_bubble_Standing()
+            pvt1.calculate_bo_bubble_Standing()
+            pvt1.calculate_bo_Standing()
+            rhoo[gor].append(pvt1.get_rhoo_in_place())
+        plt.plot(p, rhoo[gor])  
+
+    ax = plt.gca() 
+    ax.legend(['GOR='+str(gor) for gor in rhoo.keys()]) 
+    plt.grid()
+    plt.xlabel('p [bar]')  
+    plt.ylabel('Rho Oil [kg/m3]')  
+    plt.title('Oil Density Using Standing Correlation')  
+    save_plot(plt,'rhoo')
+
+def rhog_test():
+    pvt1 = pvt.PVT()
+    # pvt1.set_api(15.)
+    pvt1.set_dg(0.8)
+    pvt1.set_t(50.)
+
+    p_init = 1
+    p_end = 500
+    steps = 200
+    p = [p_init + i/(steps-1)*(p_end - p_init) for i in range(steps)]
+    rhog = {'real':[], 'ideal':[]}
+
+    _ = plt.figure()
+    pvt1.calculate_p_pc_Standing() 
+    pvt1.calculate_t_pc_Standing() 
+    pvt1.calculate_t_pr() 
+    for pi in p:
+        pvt1.set_p(pi)
+        pvt1.calculate_p_pr() 
+        pvt1.calculate_z_Standing()
+        pvt1.calculate_bg()
+        rhog['real'].append(pvt1.get_rhog_in_place())
+        pvt1.set_z(1.)
+        pvt1.calculate_bg()
+        rhog['ideal'].append(pvt1.get_rhog_in_place())
+    plt.plot(p, rhog['real'])  
+    plt.plot(p, rhog['ideal'])  
+
+    ax = plt.gca() 
+    ax.legend(rhog.keys()) 
+    plt.grid()
+    plt.xlabel('p [bar]')  
+    plt.ylabel('Rho Gas [kg/m3]')  
+    plt.title('Gas Density Using Standing Correlation')  
+    save_plot(plt,'rhog')
+
 if __name__ == "__main__":
     rs_test()
-    # pb_test()
-    # pb_test2()
-    # bo_test()
-    # z_test()
-    # bg_test()
+    pb_test()
+    pb_test2()
+    bo_test()
+    z_test()
+    bg_test()
     uo_test()
+    rhoo_test()
+    rhog_test()

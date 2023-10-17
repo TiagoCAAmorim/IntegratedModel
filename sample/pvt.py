@@ -160,7 +160,7 @@ class PVT:
     def set_y_n2(self, y):
         self._check_value(y,0,1.)
         self._y_n2 = y
-    def set_y_z(self, z):
+    def set_z(self, z):
         self._check_value(z,1e-20,1e6)
         self._z = z
     def set_uo_do(self, u):
@@ -175,15 +175,9 @@ class PVT:
         self._do = None
     def reset_do(self):
         self.reset_API()
-    def reset_rhoo(self):
-        self.reset_API()
     def reset_dg(self):
         self._dg = None
-    def reset_rhog(self):
-        self._dg = None
     def reset_dw(self):
-        self._dw = None
-    def reset_rhow(self):
         self._dw = None
     def reset_t(self):
         self._t = None
@@ -233,15 +227,43 @@ class PVT:
         return self._api
     def get_do(self):
         return self._do
-    def get_rhoo(self):
+    def get_rhoo_std(self):
+        if self._do is None:
+            return None
         return self._do * self._rhow
+    def get_rhoo_in_place(self, auto=False):
+        if self._do is None or self._dg is None:
+            return None
+        if auto:
+            if self._rs is None:
+                self.calculate_rs_Standing()
+            if self._bo is None:
+                self.calculate_bo_Standing()
+        else:
+            if self._rs is None or self._bo is None:
+                return None
+        return (self.get_rhoo_std() + self._rs * self.get_rhog_std()) / self._bo
     def get_dg(self):
         return self._dg
-    def get_rhog(self):
+    def get_rhog_std(self):
+        if self._dg is None:
+            return None
         return self._dg * self._rho_air
+    def get_rhog_in_place(self, auto=False):
+        if self._dg is None:
+            return None
+        if auto:
+            if self._bg is None:
+                self.calculate_bg(True)
+        else:
+            if self._bg is None:
+                return None
+        return self.get_rhog_std() / self._bg
     def get_dw(self):
         return self._dw
-    def get_rhow(self):
+    def get_rhow_std(self):
+        if self._dw is None:
+            return None
         return self._dw * self._rhow
     def get_t(self):
         return self._t
@@ -578,3 +600,5 @@ class PVT:
         A = pow(10, rs * (2.2E-7 * rs - 7.4E-4))
         b = 0.68 / pow(10, 8.62E-5 * rs) + 0.25 / pow(10, 1.1E-3 * rs) + 0.062 / pow(10, 3.74E-3 * rs)
         self._uo = A * pow(self._uo_do, b)
+
+
