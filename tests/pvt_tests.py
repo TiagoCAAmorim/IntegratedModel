@@ -29,7 +29,7 @@ def rs_test():
         plt.plot(p, rs[rsi])  
 
     ax = plt.gca() 
-    ax.legend(rs.keys()) 
+    ax.legend(['GOR = '+str(i) for i in rs.keys()]) 
     plt.grid()
     plt.xlabel('p [bar]')  
     plt.ylabel('rs [m3/m3]')  
@@ -141,7 +141,7 @@ def bo_test():
     plt.title('Bo Using Standing Correlation')  
     save_plot(plt,'bo')    
 
-def dg_test():
+def z_test():
     pvt1 = pvt.PVT()
     pvt1.set_dg(0.6)
     pvt1.set_t(80.)
@@ -157,10 +157,12 @@ def dg_test():
     dg = {'dg=0.6':[], 'dg=0.9':[]}
     for pi in p:
         pvt1.set_p(pi)
+        pvt1.calculate_p_pr(auto=True)
         pvt1.calculate_z_Standing(auto=True)
         dg['dg=0.6'].append(pvt1.get_z())
         
         pvt2.set_p(pi)
+        pvt2.calculate_p_pr(auto=True)
         pvt2.calculate_z_Standing(auto=True)
         dg['dg=0.9'].append(pvt2.get_z())
     fig = plt.figure() 
@@ -171,13 +173,52 @@ def dg_test():
     ax.legend(dg.keys()) 
     plt.grid()
     plt.xlabel('p [bar]')  
-    plt.ylabel('z [-]')  
+    plt.ylabel('z')  
     plt.title('Z Using Standing Correlation')  
     save_plot(plt,'z')    
 
+def bg_test():
+    pvt1 = pvt.PVT()
+    pvt1.set_dg(0.6)
+    pvt1.set_t(80.)
+
+    pvt2 = pvt.PVT()
+    pvt2.set_dg(0.9)
+    pvt2.set_t(80.)
+
+    p_init = 50
+    p_end = 500
+    steps = 500
+    p = [p_init + i/(steps-1)*(p_end - p_init) for i in range(steps)]
+    dg = {'dg=0.6':[], 'dg=0.9':[]}
+    for pi in p:
+        pvt1.set_p(pi)
+        pvt1.calculate_p_pr(auto=True)
+        pvt1.calculate_z_Standing(auto=True)
+        pvt1.calculate_bg(auto=True)
+        dg['dg=0.6'].append(pvt1.get_bg())
+        
+        pvt2.set_p(pi)
+        pvt2.calculate_p_pr(auto=True)
+        pvt2.calculate_z_Standing(auto=True)
+        pvt2.calculate_bg(auto=True)
+        dg['dg=0.9'].append(pvt2.get_bg())
+    fig = plt.figure() 
+    plt.plot(p, dg['dg=0.6'])  
+    plt.plot(p, dg['dg=0.9'])  
+
+    ax = plt.gca() 
+    ax.legend(dg.keys()) 
+    plt.grid()
+    plt.xlabel('p [bar]')  
+    plt.ylabel('Bg')  
+    plt.title('Bg Using Standing Correlation')  
+    save_plot(plt,'bg')    
+
 if __name__ == "__main__":
-    # rs_test()
+    rs_test()
     # pb_test()
     # pb_test2()
     # bo_test()
-    dg_test()
+    # z_test()
+    bg_test()

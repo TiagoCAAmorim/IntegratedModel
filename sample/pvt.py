@@ -499,7 +499,7 @@ class PVT:
                 self.calculate_t_pc_Standing()
         else:
             self._check(['t_pc'])
-        self._t_pr = self._t / self._t_pc
+        self._t_pr = (self._t  + 273.15)/ (self._t_pc + 273.15)
             
     def calculate_z_Standing(self, auto=False):
         if auto:
@@ -509,8 +509,8 @@ class PVT:
                 self.calculate_t_pr(True)
         else:
             self._check(['p_pr','t_pr'])
-        # self._check_value(self._p_pr, 0, 13)
-        # self._check_value(self._t_pr, 1.2, 2.4)
+        self._check_value(self._p_pr, 0, 13)
+        self._check_value(self._t_pr, 1.2, 2.4)
         p = self._p_pr
         t = self._t_pr
         a = 1.39 * pow(t - 0.92, 0.5) - 0.36 * t - 0.101
