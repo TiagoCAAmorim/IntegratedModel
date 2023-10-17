@@ -34,6 +34,9 @@ class PVT:
         self._y_h2s = 0.
         self._y_n2 = 0.
         self._z = None
+        
+        self._uo_do = None
+        self._uo = None
 
         self._units = {
             'api':'oAPI',
@@ -61,6 +64,8 @@ class PVT:
             'y_h2s':'-',
             'y_n2':'-',
             'z':'-',
+            'uo_do':'cp',
+            'uo':'cp',
             }
         pass
 
@@ -158,6 +163,12 @@ class PVT:
     def set_y_z(self, z):
         self._check_value(z,1e-20,1e6)
         self._z = z
+    def set_uo_do(self, u):
+        self._check_value(u,1e-20,1e6)
+        self._uo_do = u
+    def set_uo(self, u):
+        self._check_value(u,1e-20,1e6)
+        self._uo = u
 
     def reset_API(self):
         self._api = None
@@ -213,6 +224,10 @@ class PVT:
         self._y_n2 = None
     def reset_z(self):
         self._z = None
+    def reset_uo_do(self):
+        self._uo_do = None
+    def reset_uo(self):
+        self._uo = None
 
     def get_API(self):
         return self._api
@@ -264,6 +279,10 @@ class PVT:
         return self._y_n2
     def get_z(self):
         return self._z
+    def get_uo_do(self):
+        return self._uo_do
+    def get_uo(self):
+        return self._uo
 
     def _check_api(self):
         if self._api is None:
@@ -351,6 +370,14 @@ class PVT:
         if self._z is None:
             raise NameError('Gas Z factor not set/estimated.')
         return True
+    def _check_uo_do(self):
+        if self._uo_do is None:
+            raise NameError('Dead oil viscosity not set/estimated.')
+        return True
+    def _check_uo(self):
+        if self._uo is None:
+            raise NameError('Oil viscosity not set/estimated.')
+        return True
 
     def _check(self, variables):
         for variable in variables:
@@ -399,6 +426,10 @@ class PVT:
                     _ = self._check_y_n2()
                 case 'z':
                     _ = self._check_z()
+                case 'uo_do':
+                    _ = self._check_uo_do()
+                case 'uo':
+                    _ = self._check_uo()
                 case '_':
                     raise NameError('Unknown variable.')
         return True
@@ -528,3 +559,22 @@ class PVT:
             self._check(['z'])
         self._bg = self._z * self._p_std / self._p * (self._t + 273.15) / (self._t_std + 273.15)
 
+    def calculate_uo_do_Standing(self):
+        self._check(['t','api'])
+        a = pow(10, 0.43 + 8.33 / self._api)
+        x = 0.32 + 1.8E7 / pow(self._api, 4.53)
+        y = pow(360 / (1.8 * self._t + 232), a)
+        self._uo_do = x * y
+
+    def calculate_uo_Standing(self, auto=False):
+        if auto:
+            if self._rs is None:
+                self.calculate_rs_Standing()
+            if self._uo_do is None:
+                self.calculate_uo_do_Standing()
+        else:
+            self._check(['rs','uo_do'])
+        rs = 5.615 * self._rs
+        A = pow(10, rs * (2.2E-7 * rs - 7.4E-4))
+        b = 0.68 / pow(10, 8.62E-5 * rs) + 0.25 / pow(10, 1.1E-3 * rs) + 0.062 / pow(10, 3.74E-3 * rs)
+        self._uo = A * pow(self._uo_do, b)

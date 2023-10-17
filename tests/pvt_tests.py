@@ -19,7 +19,7 @@ def rs_test():
     p = [p_init + i/(steps-1)*(p_end - p_init) for i in range(steps)]
     rs = {40:[], 80:[], 120:[]}
 
-    fig = plt.figure() 
+    _ = plt.figure() 
     for rsi in rs.keys():
         pvt1.set_gor(rsi)
         for pi in p:
@@ -53,7 +53,7 @@ def pb_test():
         pb['Original'].append(pvt1.get_p_bubble())
         pvt1.calculate_p_bubble_Standing()
         pb['Modified'].append(pvt1.get_p_bubble())
-    fig = plt.figure() 
+    _ = plt.figure() 
     plt.plot(gor, pb['Original'])  
     plt.plot(gor, pb['Modified'])  
 
@@ -89,7 +89,7 @@ def pb_test2():
         pvt2.set_t(ti)
         pvt2.calculate_p_bubble_Standing()
         pb['heavy'].append(pvt2.get_p_bubble())
-    fig = plt.figure() 
+    _ = plt.figure() 
     plt.plot(t, pb['light'])  
     plt.plot(t, pb['heavy'])  
 
@@ -129,7 +129,7 @@ def bo_test():
         pvt2.calculate_rs_Standing()
         pvt2.calculate_bo_Standing(auto=True)
         bo['heavy'].append(pvt2.get_bo())
-    fig = plt.figure() 
+    _ = plt.figure() 
     plt.plot(p, bo['light'])  
     plt.plot(p, bo['heavy'])  
 
@@ -165,7 +165,7 @@ def z_test():
         pvt2.calculate_p_pr(auto=True)
         pvt2.calculate_z_Standing(auto=True)
         dg['dg=0.9'].append(pvt2.get_z())
-    fig = plt.figure() 
+    _ = plt.figure() 
     plt.plot(p, dg['dg=0.6'])  
     plt.plot(p, dg['dg=0.9'])  
 
@@ -203,7 +203,7 @@ def bg_test():
         pvt2.calculate_z_Standing(auto=True)
         pvt2.calculate_bg(auto=True)
         dg['dg=0.9'].append(pvt2.get_bg())
-    fig = plt.figure() 
+    _ = plt.figure() 
     plt.plot(p, dg['dg=0.6'])  
     plt.plot(p, dg['dg=0.9'])  
 
@@ -215,10 +215,42 @@ def bg_test():
     plt.title('Bg Using Standing Correlation')  
     save_plot(plt,'bg')    
 
+def uo_test():
+    pvt1 = pvt.PVT()
+    pvt1.set_api(15.)
+    pvt1.set_dg(0.8)
+
+    p_init = 1
+    p_end = 300
+    steps = 200
+    p = [p_init + i/(steps-1)*(p_end - p_init) for i in range(steps)]
+    uo = {(20,50):[], (60,50):[], (20,60):[]}
+
+    _ = plt.figure() 
+    for (gor, t) in uo.keys():
+        pvt1.set_t(t)
+        pvt1.set_gor(gor)
+        for pi in p:
+            pvt1.set_p(pi)
+            pvt1.calculate_rs_Standing()
+            pvt1.calculate_uo_do_Standing()
+            pvt1.calculate_uo_Standing(auto=True)
+            uo[(gor,t)].append(pvt1.get_uo())
+        plt.plot(p, uo[(gor,t)])  
+
+    ax = plt.gca() 
+    ax.legend(['GOR='+str(gor)+' T='+str(t) for (gor,t) in uo.keys()]) 
+    plt.grid()
+    plt.xlabel('p [bar]')  
+    plt.ylabel('Uo [cP]')  
+    plt.title('Uo Using Standing Correlation')  
+    save_plot(plt,'uo')
+
 if __name__ == "__main__":
     rs_test()
     # pb_test()
     # pb_test2()
     # bo_test()
     # z_test()
-    bg_test()
+    # bg_test()
+    uo_test()
