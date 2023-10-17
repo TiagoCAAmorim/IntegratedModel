@@ -1,25 +1,5 @@
 import math
-
-class VariablesList:
-    def __init__(self, variables_list):
-        self._variables = variables_list
-
-    def get_variables_list(self):
-        out = dict()
-        for k,v in self._variables.items():
-            out[k] = list()
-            for vi in v:
-                out[k].append(vi)
-        return out
-    def print_variables_list(self,indent=''):
-        for k,v in self._variables.items():
-            print(f'{indent}{k}: {v[0]} [{v[1]}]')
-    def get_description(self, var):
-        if var.lower() in self._variables.keys():
-            return self._variables[var.lower()][0]
-    def get_unit(self, var):
-        if var.lower() in self._variables.keys():
-            return self._variables[var.lower()][1]
+import common
 
 class PVT:
 
@@ -59,7 +39,7 @@ class PVT:
         self._uo_do = None
         self._uo = None
 
-        self._variables = VariablesList({
+        self.variables = common.VariablesList({
             'api':['Oil API degree', 'oAPI'],
             'do':['Oil relative density', '-'],
             'dg':['Gas relative density', '-'],
@@ -88,16 +68,7 @@ class PVT:
             'uo_do':['Dead oil viscosity', 'cp'],
             'uo':['Oil viscosity', 'cp'],
             })
-
-    def get_variables_list(self):
-        return self._variables.get_variables_list()
-    def print_variables_list(self,indent=''):
-        self._variables.print_variables_list(indent=indent)
-    def get_description(self, var):
-        return self._variables.get_description(var=var)
-    def get_unit(self, var):
-        return self._variables.get_unit(var=var)
-    
+  
     def _check_value(self,value, min_value, max_value):
         if value < min_value or value > max_value:
             raise NameError(f'Invalid value ({value}). Valid values: [{min_value},{max_value}].')
@@ -323,7 +294,7 @@ class PVT:
         return self._uo
 
     def _raise_error_variable(self, variable):
-        raise NameError(f'{self.get_description(variable)} not set.')
+        raise NameError(f'{self.variables.get_description(variable)} not set.')
 
     def _check_api(self):
         if self._api is None:
