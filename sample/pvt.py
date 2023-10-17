@@ -38,49 +38,54 @@ class PVT:
         self._uo_do = None
         self._uo = None
 
-        self._units = {
-            'api':'oAPI',
-            'do':'-',
-            'dg':'-',
-            'dw':'-',
-            'rhoo':'kg/m3',
-            'rhog':'kg/m3',
-            'rhow':'kg/m3',
-            't':'oC',
-            'p':'bar',
-            'gor':'std m3/std m3',
-            'rs':'std m3/std m3',
-            'p_bubble':'bar',
-            'bo':'-',
-            'bg':'-',
-            'bw':'-',
-            'bo_bubble':'-',
-            'co_bubble':'1/bar',
-            't_pc':'oC',
-            'p_pc':'bar',
-            't_pr':'-',
-            'p_pr':'-',
-            'y_co2':'-',
-            'y_h2s':'-',
-            'y_n2':'-',
-            'z':'-',
-            'uo_do':'cp',
-            'uo':'cp',
+        self._variables = {
+            'api':['Oil API degree', 'oAPI'],
+            'do':['Oil relative density', '-'],
+            'dg':['Gas relative density', '-'],
+            'dw':['Water relative density', '-'],
+            'rhoo':['Oil density', 'kg/m3'],
+            'rhog':['Gas density', 'kg/m3'],
+            'rhow':['Water density', 'kg/m3'],
+            't':['In place temperature', 'oC'],
+            'p':['In place pressure', 'bar'],
+            'gor':['Gas oil ratio', 'std m3/std m3'],
+            'rs':['Oil solubility ratio', 'std m3/std m3'],
+            'p_bubble':['Bubble point pressure', 'bar'],
+            'bo':['Oil formation volume factor', '-'],
+            'bg':['Gas formation volume factor', '-'],
+            'bw':['Water formation volume factor', '-'],
+            'bo_bubble':['Oil formation volume factor at the bubble point pressure', '-'],
+            'co_bubble':['Oil compressibility at the bubble point pressure', '1/bar'],
+            't_pc':['Pseudo-critical temperature', 'oC'],
+            'p_pc':['Pseudo-critical pressure', 'bar'],
+            't_pr':['Pseudo-reducible temperature', '-'],
+            'p_pr':['Pseudo-reducible pressure', '-'],
+            'y_co2':['CO2 content in gas', '-'],
+            'y_h2s':['H2S content in gas', '-'],
+            'y_n2':['N2 content in gas', '-'],
+            'z':['Gas z factor', '-'],
+            'uo_do':['Dead oil viscosity', 'cp'],
+            'uo':['Oil viscosity', 'cp'],
             }
         pass
 
     def get_variables_list(self):
         out = dict()
-        for k,v in self._units.items():
-            out[k] = v
+        for k,v in self._variables.items():
+            out[k] = list()
+            for vi in v:
+                out[k].append(vi)
         return out
-    def print_variables_list(self):
-        for k,v in self._units.items():
-            print(f'{k} [{v}]')
+    def print_variables_list(self,indent=''):
+        for k,v in self._variables.items():
+            print(f'{indent}{k}: {v[0]} [{v[1]}]')
 
+    def get_description(self, var):
+        if var.lower() in self._variables.keys():
+            return self._variables[var.lower()][0]
     def get_unit(self, var):
-        if var.lower() in self._units.keys():
-            return self._units[var.lower()]
+        if var.lower() in self._variables.keys():
+            return self._variables[var.lower()][1]
 
     def _check_value(self,value, min_value, max_value):
         if value < min_value or value > max_value:
@@ -306,99 +311,104 @@ class PVT:
     def get_uo(self):
         return self._uo
 
+    def _raise_error_variable(self, variable):
+        raise NameError(f'{self.get_description(variable)} not set.')
+
     def _check_api(self):
         if self._api is None:
-            raise NameError('Oil density API not set.')
+            self._raise_error_variable('api')
         return True
     def _check_do(self):
-        return self._check_api
+        if self._do is None:
+            self._raise_error_variable('do')
+        return True
     def _check_dg(self):
         if self._dg is None:
-            raise NameError('Gas density not set.')
+            self._raise_error_variable('dg')
         return True
     def _check_dw(self):
         if self._dw is None:
-            raise NameError('Water density not set.')
+            self._raise_error_variable('dw')
         return True
     def _check_t(self):
         if self._t is None:
-            raise NameError('In place temperature not set.')
+            self._raise_error_variable('t')
         return True
     def _check_p(self):
         if self._p is None:
-            raise NameError('In place pressure not set.')
+            self._raise_error_variable('p')
         return True
     def _check_rs(self):
         if self._rs is None:
-            raise NameError('Oil solubility ratio not set/estimated.')
+            self._raise_error_variable('rs')
         return True
     def _check_gor(self):
         if self._gor is None:
-            raise NameError('Gas oil ratio not set/estimated.')
+            self._raise_error_variable('gor')
         return True
     def _check_p_bubble(self):
         if self._p_bubble is None:
-            raise NameError('Oil bubble pressure not set/estimated.')
+            self._raise_error_variable('p_bubble')
         return True
     def _check_bo(self):
         if self._bo is None:
-            raise NameError('Oil formation volume factor not set/estimated.')
+            self._raise_error_variable('bo')
         return True
     def _check_bg(self):
         if self._bg is None:
-            raise NameError('Gas formation volume factor not set/estimated.')
+            self._raise_error_variable('bg')
         return True
     def _check_bw(self):
         if self._bw is None:
-            raise NameError('Water formation volume factor not set/estimated.')
+            self._raise_error_variable('bw')
         return True
     def _check_bo_bubble(self):
         if self._bo_bubble is None:
-            raise NameError('Oil formation volume factor at the bubble point not set/estimated.')
+            self._raise_error_variable('bo_bubble')
         return True
     def _check_co_bubble(self):
         if self._co_bubble is None:
-            raise NameError('Oil compressibility at the bubble point not set/estimated.')
+            self._raise_error_variable('co_bubble')
         return True
     def _check_t_pc(self):
         if self._t_pc is None:
-            raise NameError('Pseudo-critical temperature not set/estimated.')
+            self._raise_error_variable('t_pc')
         return True
     def _check_p_pc(self):
         if self._p_pc is None:
-            raise NameError('Pseudo-critical pressure not set/estimated.')
+            self._raise_error_variable('p_pc')
         return True
     def _check_t_pr(self):
         if self._t_pr is None:
-            raise NameError('Pseudo-reduced temperature not set/estimated.')
+            self._raise_error_variable('t_pr')
         return True
     def _check_p_pr(self):
         if self._p_pr is None:
-            raise NameError('Pseudo-reduced pressure not set/estimated.')
+            self._raise_error_variable('p_pr')
         return True
     def _check_y_co2(self):
         if self._y_co2 is None:
-            raise NameError('CO2 content in gas not set.')
+            self._raise_error_variable('y_co2')
         return True
     def _check_y_h2s(self):
         if self._y_h2s is None:
-            raise NameError('H2S content in gas not set.')
+            self._raise_error_variable('y_h2s')
         return True
     def _check_y_n2(self):
         if self._y_n2 is None:
-            raise NameError('N2 content in gas not set.')
+            self._raise_error_variable('y_n2')
         return True
     def _check_z(self):
         if self._z is None:
-            raise NameError('Gas Z factor not set/estimated.')
+            self._raise_error_variable('z')
         return True
     def _check_uo_do(self):
         if self._uo_do is None:
-            raise NameError('Dead oil viscosity not set/estimated.')
+            self._raise_error_variable('uo_do')
         return True
     def _check_uo(self):
         if self._uo is None:
-            raise NameError('Oil viscosity not set/estimated.')
+            self._raise_error_variable('uo')
         return True
 
     def _check(self, variables):
