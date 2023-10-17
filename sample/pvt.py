@@ -1,5 +1,26 @@
 import math
 
+class VariablesList:
+    def __init__(self, variables_list):
+        self._variables = variables_list
+
+    def get_variables_list(self):
+        out = dict()
+        for k,v in self._variables.items():
+            out[k] = list()
+            for vi in v:
+                out[k].append(vi)
+        return out
+    def print_variables_list(self,indent=''):
+        for k,v in self._variables.items():
+            print(f'{indent}{k}: {v[0]} [{v[1]}]')
+    def get_description(self, var):
+        if var.lower() in self._variables.keys():
+            return self._variables[var.lower()][0]
+    def get_unit(self, var):
+        if var.lower() in self._variables.keys():
+            return self._variables[var.lower()][1]
+
 class PVT:
 
     def __init__(self):
@@ -38,7 +59,7 @@ class PVT:
         self._uo_do = None
         self._uo = None
 
-        self._variables = {
+        self._variables = VariablesList({
             'api':['Oil API degree', 'oAPI'],
             'do':['Oil relative density', '-'],
             'dg':['Gas relative density', '-'],
@@ -66,27 +87,17 @@ class PVT:
             'z':['Gas z factor', '-'],
             'uo_do':['Dead oil viscosity', 'cp'],
             'uo':['Oil viscosity', 'cp'],
-            }
-        pass
+            })
 
     def get_variables_list(self):
-        out = dict()
-        for k,v in self._variables.items():
-            out[k] = list()
-            for vi in v:
-                out[k].append(vi)
-        return out
+        return self._variables.get_variables_list()
     def print_variables_list(self,indent=''):
-        for k,v in self._variables.items():
-            print(f'{indent}{k}: {v[0]} [{v[1]}]')
-
+        self._variables.print_variables_list(indent=indent)
     def get_description(self, var):
-        if var.lower() in self._variables.keys():
-            return self._variables[var.lower()][0]
+        return self._variables.get_description(var=var)
     def get_unit(self, var):
-        if var.lower() in self._variables.keys():
-            return self._variables[var.lower()][1]
-
+        return self._variables.get_unit(var=var)
+    
     def _check_value(self,value, min_value, max_value):
         if value < min_value or value > max_value:
             raise NameError(f'Invalid value ({value}). Valid values: [{min_value},{max_value}].')
