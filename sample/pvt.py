@@ -69,6 +69,46 @@ class PVT:
             'uo':['Oil viscosity', 'cp'],
             })
   
+    def copy(self):
+        pvt = PVT()
+
+        pvt._api = self._api 
+        pvt._do = self._do 
+        pvt._dw = self._dw 
+        pvt._dg = self._dg 
+        pvt._rho_air = self._rho_air 
+        pvt._rhow = self._rhow 
+
+        pvt._t = self._t 
+        pvt._p = self._p 
+        pvt._t_std = self._t_std 
+        pvt._p_std = self._p_std 
+
+        pvt._rs = self._rs 
+        pvt._p_bubble = self._p_bubble 
+        pvt._gor = self._gor 
+
+        pvt._bo = self._bo 
+        pvt._bg = self._bg 
+        pvt._bw = self._bw 
+
+        pvt._bo_bubble = self._bo_bubble 
+        pvt._co_bubble = self._co_bubble 
+
+        pvt._t_pc = self._t_pc 
+        pvt._p_pc = self._p_pc 
+        pvt._t_pr = self._t_pr 
+        pvt._p_pr = self._p_pr 
+        pvt._y_co2 = self._y_co2 
+        pvt._y_h2s = self._y_h2s 
+        pvt._y_n2 = self._y_n2 
+        pvt._z = self._z 
+        
+        pvt._uo_do = self._uo_do 
+        pvt._uo = self._uo 
+
+        return pvt
+
     def _check_value(self,value, min_value, max_value):
         if value < min_value or value > max_value:
             raise NameError(f'Invalid value ({value}). Valid values: [{min_value},{max_value}].')
