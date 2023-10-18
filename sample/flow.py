@@ -531,6 +531,9 @@ class CompositeFlowElement:
         # self._v_in = None
         # self._v_out = None
 
+        self._d = None
+        self._e = None
+
         self.variables = common.VariablesList({
             'elements':['List of FlowElements', '-'],
             'current element':['Current FlowElement', '-'],
@@ -547,6 +550,9 @@ class CompositeFlowElement:
             'q_std':['Volumetric flow rate in standard conditions', 'm3/d'],
             # 'v_in':['Inlet velocity', 'm/s'],
             # 'v_out':['Outlet velocity', 'm/s'],
+
+            'd':['Internal diameter', 'm'],
+            'e':['Rugosity', 'm'],
 
             'pvt':['PVT object','-']
             })
@@ -569,6 +575,11 @@ class CompositeFlowElement:
     #     self._v_in = v
     # def set_v_out(self,v):
     #     self._v_out = v
+    def set_d(self,d):
+        self._d = d
+    def set_e(self,e):
+        self._e = e
+
 
     def update_pvt(self):
         for element in self._elements:
@@ -578,6 +589,8 @@ class CompositeFlowElement:
         self._elements.append(FlowElement())
         self._elements[-1].pvt = self.pvt.copy()
         self._elements[-1]._n = self._n
+        self._elements[-1]._d = self._d
+        self._elements[-1]._e = self._e
         if len(self._elements) > 1:
             self._elements[-1].set_z_in(self._elements[-2].get_z_out()[-1])
         else:
@@ -669,14 +682,3 @@ class CompositeFlowElement:
             element.set_t_out(prev_element.get_t_in()[0])
             element.set_q_out(prev_element.get_q_in()[0])
             element.solve_in_flow()
-
-    # def solve_in_flow(self):
-    #     self._build_element_list()
-    #     self._elements[-1].solve_in_flow()
-    #     n = self._n
-    #     for i, element in enumerate(self._elements[-2::-1]):
-    #         self._elements[n-i-2].set_p_out(self._elements[n-i-1].get_p_in())
-    #         self._elements[n-i-2].set_t_out(self._elements[n-i-1].get_t_in())
-    #         self._elements[n-i-2].set_q_out(self._elements[n-i-1].get_q_in())
-    #         self._elements[n-i-2].set_v_out(self._elements[n-i-1].get_v_in())
-    #         self._elements[n-i-2].solve_in_flow()
