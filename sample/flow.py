@@ -474,7 +474,6 @@ class FlowElement(SubFlowElement):
             element.set_p_in(prev_element.get_p_out())
             element.set_t_in(prev_element.get_t_out())
             element.set_q_in(prev_element.get_q_out())
-            # element.set_v_in(prev_element.get_v_out())
             prev_element = element
             element.solve_out_flow()
         self.set_p_out(self._elements[-1].get_p_out())
@@ -489,7 +488,6 @@ class FlowElement(SubFlowElement):
             element.set_p_out(prev_element.get_p_in())
             element.set_t_out(prev_element.get_t_in())
             element.set_q_out(prev_element.get_q_in())
-            # element.set_v_out(prev_element.get_v_in())
             prev_element = element
             element.solve_in_flow()
         self.set_p_in(self._elements[0].get_p_in())
@@ -521,6 +519,10 @@ class CompositeFlowElement:
         self._d = None
         self._e = None
 
+        self._pwf = None
+        self._max_iter = 20
+        self._eps = 1E-12
+
         self.variables = common.VariablesList({
             'elements':['List of FlowElements', '-'],
             'current element':['Current FlowElement', '-'],
@@ -541,6 +543,8 @@ class CompositeFlowElement:
 
             'pvt':['PVT object','-'],
             'ipr':['IPR object','-'],
+            'pwf':['Bottom-hole pressure at the operational point','-'],
+            'max_iter':['Maximum interations in operational point calculation','-'],
             })
 
     def set_number_divisions(self, n):
@@ -563,6 +567,8 @@ class CompositeFlowElement:
         self._d = d
     def set_e(self,e):
         self._e = e
+    def set_max_iter(self,i):
+        self._max_iter = i
 
     def update_pvt(self):
         for element in self._elements:
@@ -639,6 +645,8 @@ class CompositeFlowElement:
 
     def get_q_std(self):
         return self._q_std
+    def get_pwf(self):
+        return self._pwf
 
     def _check_element_list(self):
         # check that z_out[i-1] = z_in[i]
@@ -681,3 +689,37 @@ class CompositeFlowElement:
         self.set_p_in(self._elements[0].get_p_in()[0])
         self.set_t_in(self._elements[0].get_t_in()[0])
         self.set_q_in(self._elements[0].get_q_in()[0])
+
+    def _pwf_error(self, pwf):
+        q_std = self.ipr.get_q(pwf)
+        self.set_q_std(q_std)
+        self.solve_in_flow()
+        return pwf - self.get_p_in()[0]
+
+    def solve_operation_point(self):
+        p0 = self.ipr._pr * 0.9
+        f0 = self._pwf_error(p0)
+        p1 = self.ipr._pr * 0.8
+        f1 = self._pwf_error(p1)
+        p_best = p0
+        f_best = abs(f0)
+        if abs(f1) < f_best:
+            p_best = p1
+            f_best = abs(f1)
+        i = 0
+        while i < self._max_iter:
+            p2 = p1 - f1 * (p1 - p0) / (f1 - f0)
+            f2 = self._pwf_error(p2)
+            if abs(f2) < f_best:
+                p_best = p2
+                f_best = abs(f2)
+            if f_best < self._eps:
+                break
+            if abs(p2 - p1) < self._eps:
+                break
+            p0 = p1
+            f0 = f1
+            p1 = p2
+            f1 = f2
+            i += 1
+        self._pwf = p_best

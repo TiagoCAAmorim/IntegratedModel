@@ -282,13 +282,88 @@ def system_ex1():
     plt.title('System with 3 Elements - Example 1')
     save_plot(plt,'system1')
 
+def system_ex1_vfp():
+    print('System with 3 Elements - (q,p) plot')
+
+    trunk = define_system_ex1()
+    trunk.set_p_out(10.)
+    trunk.set_t_out(50.)
+    trunk.ipr.set_pi(40.)
+    trunk.ipr.set_pr(340.)
+
+    q_std = [10., 100., 200., 500., 600., 700., 800., 900., 1000., 1500., 2000., 2500., 2600., 2700., 2800., 2900., 3000., 3500., 4000.]
+    pwf = []
+    q_ipr = []
+    for q in q_std:
+        trunk.set_q_std(q)
+        trunk.solve_in_flow()
+        pwf.append(trunk.get_p_in()[0])
+        q_ipr.append(trunk.ipr.get_q(pwf[-1]))
+        # print(f'Q={q}, Re={trunk.get_re()[0]}')
+
+    trunk.solve_operation_point()
+    print(f'Operation point: pwf = {trunk.get_pwf()} bar, q = {trunk.ipr.get_q(trunk.get_pwf())} m3/d')
+
+    _ = plt.figure()
+    plt.plot(q_std, pwf, '-b')
+    plt.plot(q_ipr, pwf, '-r')
+    plt.plot(trunk.ipr.get_q(trunk.get_pwf()), trunk.get_pwf(), 'o')
+    ax = plt.gca()
+    ax.legend(['VFP', 'IPR', 'Operation'])
+    plt.grid()
+    plt.xlabel('Q [std m3/d]')
+    plt.ylabel('Pwf [bar]')
+    plt.title('System with 3 Elements - Example 1')
+    save_plot(plt,'system1_qp')
+
+def system_ex1_sensibility():
+    print('System with 3 Elements - Sensibility')
+
+    trunk = define_system_ex1()
+    trunk.set_p_out(10.)
+    trunk.set_t_out(50.)
+    trunk.ipr.set_pi(40.)
+    trunk.ipr.set_pr(340.)
+
+    # p_out = [2., 5., 10., 15., 20., 30.]
+    # q = []
+    # for p in p_out:
+    #     trunk.set_p_out(p)
+    #     trunk.solve_operation_point()
+    #     q.append(trunk.ipr.get_q(trunk.get_pwf()))
+    # _ = plt.figure()
+    # plt.plot(p_out, q, 'o-b')
+    # plt.grid()
+    # plt.xlabel('P surface [bar]')
+    # plt.ylabel('Q [std m3/d]')
+    # plt.title('System with 3 Elements - Sensibility')
+    # save_plot(plt,'system1_p_out')
+
+    trunk.set_p_out(10.)
+    d_list = [4., 5., 6., 7., 8.]
+    q_d = []
+    for d in d_list:
+        trunk.set_d(d * 2.54/100.)
+        trunk.solve_operation_point()
+        q_d.append(trunk.ipr.get_q(trunk.get_pwf()))
+    _ = plt.figure()
+    plt.plot(d_list, q_d, 'o-b')
+    plt.grid()
+    plt.xlabel('Pipe diameter [in]')
+    plt.ylabel('Q [std m3/d]')
+    plt.title('System with 3 Elements - Sensibility')
+    save_plot(plt,'system1_d')
+
 if __name__ == "__main__":
-    horizontal_test()
-    horizontal_divided_test()
-    horizontal_two_elements_test()
-    vertical_test()
-    vertical_divided_test()
-    vertical_two_elements_test()
-    vertical_sensibility_test()
-    system_ex1()
+    # horizontal_test()
+    # horizontal_divided_test()
+    # horizontal_two_elements_test()
+    # vertical_test()
+    # vertical_divided_test()
+    # vertical_two_elements_test()
+    # vertical_sensibility_test()
+    # system_ex1()
+    # system_ex1_vfp()
+    system_ex1_sensibility()
+
     pass
