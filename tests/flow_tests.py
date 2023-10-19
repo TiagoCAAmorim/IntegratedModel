@@ -11,13 +11,14 @@ def define_common_parameters(trunk):
     trunk.pvt.set_api(15.)
     trunk.pvt.set_gor(20.)
     trunk.pvt.set_dg(0.6)
+
     trunk.set_d(6. * 2.54/100.)
     trunk.set_e(0.6 / 1000.)
+
     trunk.set_p_in(340.)
-    trunk.set_p_out(20.)
-    trunk.set_q_in(1000.)
     trunk.set_t_in(50.)
-    trunk.set_t_out(50.)
+
+    trunk.set_q_std(1000.)
 
 def horizontal_test():
     print('1000 m Horizontal trunk')
@@ -73,8 +74,6 @@ def horizontal_divided_test():
     plt.plot([0] + trunk.get_h_cumulative(), [trunk.get_p_in()[0]] + trunk.get_p_out())
 
     print('  Calculation from Outlet to Inlet')
-    trunk.set_p_out(trunk._elements[-1].get_p_out())
-    trunk.set_q_out(trunk._elements[-1].get_q_out())
     trunk.set_p_in(None)
     trunk.set_q_in(None)
     trunk.solve_in_flow()
@@ -108,8 +107,6 @@ def vertical_divided_test():
     plt.plot([0] + trunk.get_h_cumulative(), [trunk.get_p_in()[0]] + trunk.get_p_out())
 
     print('  Calculation from Outlet to Inlet')
-    trunk.set_p_out(trunk._elements[-1].get_p_out())
-    trunk.set_q_out(trunk._elements[-1].get_q_out())
     trunk.set_p_in(None)
     trunk.set_q_in(None)
     trunk.solve_in_flow()
@@ -145,7 +142,6 @@ def vertical_sensibility_test():
 
     _ = plt.figure()
     plt.plot(n_list, p_list)
-
     plt.grid()
     plt.xlabel('Number of segments in calculation')
     plt.ylabel('p out [bar]')
@@ -177,8 +173,6 @@ def horizontal_two_elements_test():
     plt.plot([0] + trunk.get_h_cumulative(), [trunk.get_p_in()[0]] + trunk.get_p_out())
 
     print('  Calculation from Outlet to Inlet')
-    trunk.set_p_out(trunk._elements[-1].get_p_out()[-1])
-    trunk.set_q_out(trunk._elements[-1].get_q_out()[-1])
     trunk.set_p_in(None)
     trunk.set_q_in(None)
     trunk.solve_in_flow()
@@ -235,11 +229,10 @@ def vertical_two_elements_test():
     plt.title('Vertical Trunk as Two Elements')
     save_plot(plt,'vertical2')
 
-def system_ex1():
-    print('System with 3 Elements - Example 1')
+def define_system_ex1():
     trunk = flow.CompositeFlowElement()
     define_common_parameters(trunk)
-    trunk.set_number_divisions(20)
+    trunk.set_number_divisions(100)
 
     trunk.add_element()
     trunk.current_element.set_h(1600.)
@@ -250,12 +243,19 @@ def system_ex1():
     trunk.current_element.set_h(500.)
     trunk.current_element.set_z_in(-1320.)
     trunk.current_element.set_z_out(-1320.)
+    trunk.current_element.set_number_divisions(10)
 
     trunk.add_element()
     trunk.current_element.set_h(1320.)
     trunk.current_element.set_z_in(-1320.)
     trunk.current_element.set_z_out(0.)
 
+    return trunk
+
+def system_ex1():
+    print('System with 3 Elements - Example 1')
+
+    trunk = define_system_ex1()
     print('  Calculation from Inlet to Outlet')
     trunk.solve_out_flow()
     print(f'    Pressure in: {trunk.get_p_in()[0]} bar.')
@@ -283,12 +283,12 @@ def system_ex1():
     save_plot(plt,'system1')
 
 if __name__ == "__main__":
-    # horizontal_test()
-    # horizontal_divided_test()
-    # horizontal_two_elements_test()
-    # vertical_test()
-    # vertical_divided_test()
-    # vertical_two_elements_test()
-    # vertical_sensibility_test()
+    horizontal_test()
+    horizontal_divided_test()
+    horizontal_two_elements_test()
+    vertical_test()
+    vertical_divided_test()
+    vertical_two_elements_test()
+    vertical_sensibility_test()
     system_ex1()
     pass

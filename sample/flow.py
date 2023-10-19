@@ -151,10 +151,6 @@ class SubFlowElement:
         self._q_in = q
     def set_q_out(self,q):
         self._q_out = q
-    # def set_v_in(self,v):
-    #     self._v_in = v
-    # def set_v_out(self,v):
-    #     self._v_out = v
     def set_d(self,d):
         self._d = d
     def set_e(self,e):
@@ -230,12 +226,26 @@ class SubFlowElement:
         self.calculate_rhoo(self._p_out, self._t_out)
         self._q_out = self._m_rate / self.pvt.get_rhoo_in_place() * (24*60*60)
 
+    def set_q_std(self, q):
+        self.calculate_m_rate_std(q)
+        if (self._p_in is not None) and (self._t_in is not None):
+            self.calculate_q_in()
+        if (self._p_out is not None) and (self._t_out is not None):
+            self.calculate_q_out()
+
+    def get_q_std(self):
+        self.calculate_rhoo(self.pvt._p_std, self.pvt._t_std)
+        return self._m_rate / self.pvt.get_rhoo_in_place() * (24*60*60)
+
     def calculate_m_rate_in(self):
         self.calculate_rhoo(self._p_in, self._t_in)
         self._m_rate = self.pvt.get_rhoo_in_place() * self._q_in / (24*60*60)
     def calculate_m_rate_out(self):
         self.calculate_rhoo(self._p_out, self._t_out)
         self._m_rate = self.pvt.get_rhoo_in_place() * self._q_out / (24*60*60)
+    def calculate_m_rate_std(self, q_std):
+        self.calculate_rhoo(self.pvt._p_std, self.pvt._t_std)
+        self._m_rate = self.pvt.get_rhoo_in_place() * q_std / (24*60*60)
 
     def calculate_v_in(self):
         self.calculate_rhoo(self._p_in, self._t_in)
@@ -391,32 +401,6 @@ class FlowElement(SubFlowElement):
 
     def set_number_divisions(self, n):
         self._n = n
-    def set_z_in(self,z):
-        super().set_z_in(z)
-    def set_z_out(self,z):
-        super().set_z_out(z)
-    def set_p_in(self,p):
-        super().set_p_in(p)
-    def set_p_out(self,p):
-        super().set_p_out(p)
-    def set_t_in(self,t):
-        super().set_t_in(t)
-    def set_t_out(self,t):
-        super().set_t_out(t)
-    def set_q_in(self,q):
-        super().set_q_in(q)
-    def set_q_out(self,q):
-        super().set_q_out(q)
-    # def set_v_in(self,v):
-    #     super().set_v_in(v)
-    # def set_v_out(self,v):
-    #     super().set_v_out(v)
-    def set_d(self,d):
-        super().set_d(d)
-    def set_e(self,e):
-        super().set_e(e)
-    def set_h(self,h):
-        super().set_h(h)
 
     def _get_results_elements(self, get_method_name, default_value):
         if len(self._elements) == 0:
@@ -493,6 +477,9 @@ class FlowElement(SubFlowElement):
             # element.set_v_in(prev_element.get_v_out())
             prev_element = element
             element.solve_out_flow()
+        self.set_p_out(self._elements[-1].get_p_out())
+        self.set_t_out(self._elements[-1].get_t_out())
+        self.set_q_out(self._elements[-1].get_q_out())
 
     def solve_in_flow(self):
         self._build_element_list()
@@ -505,22 +492,24 @@ class FlowElement(SubFlowElement):
             # element.set_v_out(prev_element.get_v_in())
             prev_element = element
             element.solve_in_flow()
+        self.set_p_in(self._elements[0].get_p_in())
+        self.set_t_in(self._elements[0].get_t_in())
+        self.set_q_in(self._elements[0].get_q_in())
 
 class CompositeFlowElement:
 
     def __init__(self):
-        super().__init__()
         self._elements = []
         self.current_element = None
         self._n = 1
         self.pvt = pvt.PVT()
+        self.ipr = ipr.IPR()
 
         self._p_in = None
         self._p_out = None
         self._t_in = None
         self._t_out = None
 
-        # self._m_rate = None
         self._q_in = None
         self._q_out = None
 
@@ -528,8 +517,6 @@ class CompositeFlowElement:
         # self._qo_std = None
         # self._qg_std = None
         # self._qw_std = None
-        # self._v_in = None
-        # self._v_out = None
 
         self._d = None
         self._e = None
@@ -548,13 +535,12 @@ class CompositeFlowElement:
             'q_in':['Inlet volumetric flow rate', 'm3/d'],
             'q_out':['Outlet volumetric flow rate', 'm3/d'],
             'q_std':['Volumetric flow rate in standard conditions', 'm3/d'],
-            # 'v_in':['Inlet velocity', 'm/s'],
-            # 'v_out':['Outlet velocity', 'm/s'],
 
             'd':['Internal diameter', 'm'],
             'e':['Rugosity', 'm'],
 
-            'pvt':['PVT object','-']
+            'pvt':['PVT object','-'],
+            'ipr':['IPR object','-'],
             })
 
     def set_number_divisions(self, n):
@@ -571,15 +557,12 @@ class CompositeFlowElement:
         self._q_in = q
     def set_q_out(self,q):
         self._q_out = q
-    # def set_v_in(self,v):
-    #     self._v_in = v
-    # def set_v_out(self,v):
-    #     self._v_out = v
+    def set_q_std(self,q):
+        self._q_std = q
     def set_d(self,d):
         self._d = d
     def set_e(self,e):
         self._e = e
-
 
     def update_pvt(self):
         for element in self._elements:
@@ -654,14 +637,21 @@ class CompositeFlowElement:
         h = self.get_h()
         return [sum(h[:i + 1]) for i in range(len(h))]
 
+    def get_q_std(self):
+        return self._q_std
+
     def _check_element_list(self):
+        # check that z_out[i-1] = z_in[i]
         pass
 
     def solve_out_flow(self):
         self._check_element_list()
         self._elements[0].set_p_in(self._p_in)
-        self._elements[0].set_q_in(self._q_in)
         self._elements[0].set_t_in(self._t_in)
+        if self._q_in is None:
+            self._elements[0].set_q_std(self._q_std)
+        else:
+            self._elements[0].set_q_in(self._q_in)
         self._elements[0].solve_out_flow()
         prev_element = self._elements[0]
         for element in self._elements[1:]:
@@ -669,12 +659,18 @@ class CompositeFlowElement:
             element.set_t_in(prev_element.get_t_out()[-1])
             element.set_q_in(prev_element.get_q_out()[-1])
             element.solve_out_flow()
+        self.set_p_out(self._elements[-1].get_p_out()[-1])
+        self.set_t_out(self._elements[-1].get_t_out()[-1])
+        self.set_q_out(self._elements[-1].get_q_out()[-1])
 
     def solve_in_flow(self):
         self._check_element_list()
         self._elements[-1].set_p_out(self._p_out)
-        self._elements[-1].set_q_out(self._q_out)
         self._elements[-1].set_t_out(self._t_out)
+        if self._q_out is None:
+            self._elements[-1].set_q_std(self._q_std)
+        else:
+            self._elements[-1].set_q_out(self._q_out)
         self._elements[-1].solve_in_flow()
         prev_element = self._elements[-1]
         for element in self._elements[-2::-1]:
@@ -682,3 +678,6 @@ class CompositeFlowElement:
             element.set_t_out(prev_element.get_t_in()[0])
             element.set_q_out(prev_element.get_q_in()[0])
             element.solve_in_flow()
+        self.set_p_in(self._elements[0].get_p_in()[0])
+        self.set_t_in(self._elements[0].get_t_in()[0])
+        self.set_q_in(self._elements[0].get_q_in()[0])
