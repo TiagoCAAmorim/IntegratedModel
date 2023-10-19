@@ -201,6 +201,13 @@ class SubFlowElement:
     def get_hl(self):
         return self._hl
 
+    def get_p_bubble(self):
+        return self.pvt.get_p_bubble()
+    def get_rs(self):
+        return self.pvt.get_rs()
+    def get_gor(self):
+        return self.pvt.get_gor()
+
     def calculate_p(self):
         self._p = (self._p_in + self._p_out) / 2.
     def calculate_t(self):
@@ -454,6 +461,12 @@ class FlowElement(SubFlowElement):
         return self._get_results_elements('get_re', self._re)
     def get_hl(self):
         return self._get_results_elements('get_hl', self._hl)
+    def get_p_bubble(self):
+        return self._get_results_elements('get_p_bubble', 0)
+    def get_rs(self):
+        return self._get_results_elements('get_rs', 0)
+    def get_gor(self):
+        return self._get_results_elements('get_gor', 0)
 
     def get_h_cumulative(self):
         h = self.get_h()
@@ -638,6 +651,12 @@ class CompositeFlowElement:
         return self._get_results_elements('get_re')
     def get_hl(self):
         return self._get_results_elements('get_hl')
+    def get_p_bubble(self):
+        return self._get_results_elements('get_p_bubble')
+    def get_rs(self):
+        return self._get_results_elements('get_rs')
+    def get_gor(self):
+        return self._get_results_elements('get_gor')
 
     def get_h_cumulative(self):
         h = self.get_h()

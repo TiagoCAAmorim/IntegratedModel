@@ -9,7 +9,7 @@ def save_plot(plt, name):
 
 def define_common_parameters(trunk):
     trunk.pvt.set_api(15.)
-    trunk.pvt.set_gor(20.)
+    trunk.pvt.set_gor(15.)
     trunk.pvt.set_dg(0.6)
 
     trunk.set_d(6. * 2.54/100.)
@@ -274,8 +274,12 @@ def system_ex1():
     print(f'    Pressure out: {trunk.get_p_out()[-1]} bar.')
 
     plt.plot([0] + trunk.get_h_cumulative(), trunk.get_p_in() + [trunk.get_p_out()[-1]])
+
+
+    plt.plot(trunk.get_h_cumulative(), trunk.get_p_bubble())
+
     ax = plt.gca()
-    ax.legend(['Inlet to Outlet', 'Outlet to Inlet'])
+    ax.legend(['Inlet to Outlet', 'Outlet to Inlet','Bubble pressure'])
     plt.grid()
     plt.xlabel('Lenght along element [m]')
     plt.ylabel('p [bar]')
@@ -363,8 +367,8 @@ if __name__ == "__main__":
     # vertical_divided_test()
     # vertical_two_elements_test()
     # vertical_sensibility_test()
-    # system_ex1()
+    system_ex1()
     # system_ex1_vfp()
-    system_ex1_sensibility()
+    # system_ex1_sensibility()
 
     pass
