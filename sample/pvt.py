@@ -23,10 +23,10 @@ class PVT:
         self._bo = None
         self._bg = None
         self._bw = None
-        
+
         self._bo_bubble = None
         self._co_bubble = None
-        
+
         self._t_pc = None
         self._p_pc = None
         self._t_pr = None
@@ -35,7 +35,7 @@ class PVT:
         self._y_h2s = 0.
         self._y_n2 = 0.
         self._z = None
-        
+
         self._uo_do = None
         self._uo = None
 
@@ -68,44 +68,44 @@ class PVT:
             'uo_do':['Dead oil viscosity', 'cp'],
             'uo':['Oil viscosity', 'cp'],
             })
-  
+
     def copy(self):
         pvt = PVT()
 
-        pvt._api = self._api 
-        pvt._do = self._do 
-        pvt._dw = self._dw 
-        pvt._dg = self._dg 
-        pvt._rho_air = self._rho_air 
-        pvt._rhow = self._rhow 
+        pvt._api = self._api
+        pvt._do = self._do
+        pvt._dw = self._dw
+        pvt._dg = self._dg
+        pvt._rho_air = self._rho_air
+        pvt._rhow = self._rhow
 
-        pvt._t = self._t 
-        pvt._p = self._p 
-        pvt._t_std = self._t_std 
-        pvt._p_std = self._p_std 
+        pvt._t = self._t
+        pvt._p = self._p
+        pvt._t_std = self._t_std
+        pvt._p_std = self._p_std
 
-        pvt._rs = self._rs 
-        pvt._p_bubble = self._p_bubble 
-        pvt._gor = self._gor 
+        pvt._rs = self._rs
+        pvt._p_bubble = self._p_bubble
+        pvt._gor = self._gor
 
-        pvt._bo = self._bo 
-        pvt._bg = self._bg 
-        pvt._bw = self._bw 
+        pvt._bo = self._bo
+        pvt._bg = self._bg
+        pvt._bw = self._bw
 
-        pvt._bo_bubble = self._bo_bubble 
-        pvt._co_bubble = self._co_bubble 
+        pvt._bo_bubble = self._bo_bubble
+        pvt._co_bubble = self._co_bubble
 
-        pvt._t_pc = self._t_pc 
-        pvt._p_pc = self._p_pc 
-        pvt._t_pr = self._t_pr 
-        pvt._p_pr = self._p_pr 
-        pvt._y_co2 = self._y_co2 
-        pvt._y_h2s = self._y_h2s 
-        pvt._y_n2 = self._y_n2 
-        pvt._z = self._z 
-        
-        pvt._uo_do = self._uo_do 
-        pvt._uo = self._uo 
+        pvt._t_pc = self._t_pc
+        pvt._p_pc = self._p_pc
+        pvt._t_pr = self._t_pr
+        pvt._p_pr = self._p_pr
+        pvt._y_co2 = self._y_co2
+        pvt._y_h2s = self._y_h2s
+        pvt._y_n2 = self._y_n2
+        pvt._z = self._z
+
+        pvt._uo_do = self._uo_do
+        pvt._uo = self._uo
 
         return pvt
 
@@ -494,7 +494,7 @@ class PVT:
         y = self._p * math.pow(10, x)
         z = 0.1373 * self._dg * math.pow(y, 1.205)
         self._rs = min(z, self._gor)
-        
+
     def calculate_p_bubble_Standing(self):
         self._check(['dg','gor','api','t'])
         x = 0.0125 * self._api - 0.00091 * (1.8 * self._t + 32)
@@ -544,6 +544,8 @@ class PVT:
                     self.calculate_co_bubble_Standing()
             else:
                 self._check(['co_bubble','bo_bubble'])
+            bo = self._bo_bubble * (1 + self._co_bubble * (self._p_bubble - self._p))
+            self._check_value(bo, 1e-3, 1e3)
             self._bo = self._bo_bubble * (1 + self._co_bubble * (self._p_bubble - self._p))
         else:
             self._check(['dg','do','t'])
@@ -567,7 +569,7 @@ class PVT:
         x = 187. + 330. * self._dg - 71.5 * self._dg * self._dg
         y = - 80. * self._y_co2 + 130. * self._y_h2s - 250. * self._y_n2
         self._t_pc = (x + y - 491.67) * 5./9.
-    
+
     def calculate_p_pr(self, auto=False):
         self._check(['p'])
         if auto:
@@ -585,7 +587,7 @@ class PVT:
         else:
             self._check(['t_pc'])
         self._t_pr = (self._t  + 273.15)/ (self._t_pc + 273.15)
-            
+
     def calculate_z_Standing(self, auto=False):
         if auto:
             if self._p_pr is None:
@@ -632,5 +634,3 @@ class PVT:
         A = math.pow(10, rs * (2.2E-7 * rs - 7.4E-4))
         b = 0.68 / math.pow(10, 8.62E-5 * rs) + 0.25 / math.pow(10, 1.1E-3 * rs) + 0.062 / math.pow(10, 3.74E-3 * rs)
         self._uo = A * math.pow(self._uo_do, b)
-
-
