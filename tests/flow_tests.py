@@ -325,25 +325,26 @@ def system_ex1_sensibility():
     trunk.ipr.set_pi(40.)
     trunk.ipr.set_pr(340.)
 
-    # p_out = [2., 5., 10., 15., 20., 30.]
-    # q = []
-    # for p in p_out:
-    #     trunk.set_p_out(p)
-    #     trunk.solve_operation_point()
-    #     q.append(trunk.ipr.get_q(trunk.get_pwf()))
-    # _ = plt.figure()
-    # plt.plot(p_out, q, 'o-b')
-    # plt.grid()
-    # plt.xlabel('P surface [bar]')
-    # plt.ylabel('Q [std m3/d]')
-    # plt.title('System with 3 Elements - Sensibility')
-    # save_plot(plt,'system1_p_out')
+    p_out = [2., 5., 10., 15., 20., 30.]
+    q = []
+    for p in p_out:
+        trunk.set_p_out(p)
+        trunk.solve_operation_point()
+        q.append(trunk.ipr.get_q(trunk.get_pwf()))
+    _ = plt.figure()
+    plt.plot(p_out, q, 'o-b')
+    plt.grid()
+    plt.xlabel('P surface [bar]')
+    plt.ylabel('Q [std m3/d]')
+    plt.title('System with 3 Elements - Sensibility')
+    save_plot(plt,'system1_p_out')
 
     trunk.set_p_out(10.)
     d_list = [4., 5., 6., 7., 8.]
     q_d = []
     for d in d_list:
-        trunk.set_d(d * 2.54/100.)
+        for element in trunk._elements:
+            element.set_d(d * 2.54/100.)
         trunk.solve_operation_point()
         q_d.append(trunk.ipr.get_q(trunk.get_pwf()))
     _ = plt.figure()
