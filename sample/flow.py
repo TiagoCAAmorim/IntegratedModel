@@ -143,6 +143,8 @@ class SubFlowElement:
         self._p_in = p
     def set_p_out(self,p):
         self._p_out = p
+    def set_p(self,p):
+        self._p = p
     def set_t_in(self,t):
         self._t_in = t
     def set_t_out(self,t):
@@ -306,9 +308,9 @@ class SubFlowElement:
         return -1E-5 * self.pvt.get_rhoo_in_place() * self._g * (dz + hl + htm + dv2)
 
     def calculate_p_in(self):
-        self._p_in = self._p_out - self.calculate_delta_p()
+        self.set_p_in(self._p_out - self.calculate_delta_p())
     def calculate_p_out(self):
-        self._p_out = self._p_in + self.calculate_delta_p()
+        self.set_p_out(self._p_in + self.calculate_delta_p())
 
     def calculate_delta_t(self):
         return 0.
@@ -335,13 +337,14 @@ class SubFlowElement:
             self.calculate_p()
             self.calculate_t()
             if abs(p_old - self._p)/abs(self._p) < self._eps and abs(t_old - self._t)/abs(self._t + 273.15) < self._eps:
-                calculate_q_function()
-                calculate_v_function()
                 break
             p_old = self.get_p()
             t_old = self.get_t()
             i += 1
-        pass
+        if i == self._max_iter:
+            print(f'Failed to converge: P_error={abs(p_old - self._p)/abs(self._p)*100.:.3g}%, P_in={self._p_in:.2f}, P_mean={self._p:.2f}, P_out={self._p_out:.2f}')
+        calculate_q_function()
+        calculate_v_function()
 
     def solve_out_flow(self):
         self.calculate_m_rate_in()
