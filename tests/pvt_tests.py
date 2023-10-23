@@ -154,6 +154,7 @@ def bo_test():
     save_plot(plt,'bo')
 
 def bo_test2():
+    print("Very heavy oil Bo calculation - Standing")
     pvt1 = pvt.PVT()
     pvt1.set_api(15.)
     pvt1.set_gor(2.)
@@ -165,20 +166,18 @@ def bo_test2():
     steps = 500
     p = [p_init + i/(steps-1)*(p_end - p_init) for i in range(steps)]
     bo = {'linear':[],'exponential':[]}
+    pvt1.set_p(p_init)
+    pvt1.calculate_rs_Standing()
+    pvt1.calculate_p_bubble_Standing()
+    print(f"Oil bubble point pressure: {pvt1.get_p_bubble():.2f} bar")
+    pvt1.calculate_co_bubble_Standing()
+    print(f"Oil compressibility at bubble point pressure: {pvt1.get_co_bubble():.4g} 1/bar")
+    pvt1.calculate_bo_bubble_Standing()
+    print(f"Oil Bo at bubble point pressure: {pvt1.get_bo_bubble():.3f}")
     for pi in p:
         pvt1.set_p(pi)
-        pvt1.calculate_rs_Standing()
-        pvt1.calculate_p_bubble_Standing()
-        pvt1.calculate_co_bubble_Standing()
-        pvt1.calculate_bo_bubble_Standing()
         pvt1.calculate_bo_Standing_linear()
         bo['linear'].append(pvt1.get_bo())
-
-        pvt1.set_p(pi)
-        pvt1.calculate_rs_Standing()
-        pvt1.calculate_p_bubble_Standing()
-        pvt1.calculate_co_bubble_Standing()
-        pvt1.calculate_bo_bubble_Standing()
         pvt1.calculate_bo_Standing()
         bo['exponential'].append(pvt1.get_bo())
 

@@ -518,7 +518,7 @@ class PVT:
         else:
             self._check(['rs','p_bubble'])
         x = -1433. + 5 * 5.615 * self._gor
-        y = 17.2*(1.8 * self._t + 491.67)
+        y = 17.2*(1.8 * self._t + 32.) #491.67)
         z = -1180. * self._dg + 12.61 * self._api
         w = 1E5 * self._p_bubble
         self._co_bubble = (x + y + z) / w
