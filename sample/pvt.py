@@ -544,9 +544,38 @@ class PVT:
                     self.calculate_co_bubble_Standing()
             else:
                 self._check(['co_bubble','bo_bubble'])
-            bo = self._bo_bubble * (1 + self._co_bubble * (self._p_bubble - self._p))
+            bo = self._bo_bubble * math.exp(self._co_bubble * (self._p_bubble - self._p))
             self._check_value(bo, 1e-3, 1e3)
-            self._bo = self._bo_bubble * (1 + self._co_bubble * (self._p_bubble - self._p))
+            self._bo = bo
+        else:
+            self._check(['dg','do','t'])
+            if auto:
+                if self._rs is None:
+                    self.calculate_rs_Standing()
+            else:
+                self._check(['rs'])
+            x = 5.615 * self._rs * math.pow(self._dg / self._do, 0.5)
+            y = 1.25 * (1.8 * self._t + 32)
+            self._bo = 0.9759 +  12E-5 * math.pow(x + y, 1.2)
+
+    def calculate_bo_Standing_linear(self, auto=False):
+        self._check(['p'])
+        if auto:
+            if self._p_bubble is None:
+                self.calculate_p_bubble_Standing()
+        else:
+            self._check(['p_bubble'])
+        if self._p > self._p_bubble:
+            if auto:
+                if self._bo_bubble is None:
+                    self.calculate_bo_bubble_Standing()
+                if self._co_bubble is None:
+                    self.calculate_co_bubble_Standing()
+            else:
+                self._check(['co_bubble','bo_bubble'])
+            bo = self._bo_bubble * (1 + self._co_bubble * (self._p_bubble - self._p))
+            # self._check_value(bo, 1e-3, 1e3)
+            self._bo = bo
         else:
             self._check(['dg','do','t'])
             if auto:
