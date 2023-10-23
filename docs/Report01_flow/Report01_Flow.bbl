@@ -1,0 +1,19 @@
+\begin{thebibliography}{1}
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\texttt{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+\expandafter\ifx\csname href\endcsname\relax
+  \def\href#1#2{#2} \def\path#1{#1}\fi
+
+\bibitem{standing1952volumetric}
+M.~B. Standing, Volumetric and phase behavior of oil field hydrocarbon systems, Society of petroleum engineers of AIME, 1952.
+
+\bibitem{VasquezBeggs}
+M.~Vasquez, H.~Beggs, \href{https://doi.org/10.2118/6719-PA}{{Correlations for Fluid Physical Property Prediction}}, Journal of Petroleum Technology 32~(06) (1980) 968--970.
+\newblock \href {http://arxiv.org/abs/https://onepetro.org/JPT/article-pdf/32/06/968/2226793/spe-6719-pa.pdf} {\path{arXiv:https://onepetro.org/JPT/article-pdf/32/06/968/2226793/spe-6719-pa.pdf}}, \href {https://doi.org/10.2118/6719-PA} {\path{doi:10.2118/6719-PA}}.
+\newline\urlprefix\url{https://doi.org/10.2118/6719-PA}
+
+\bibitem{aula01}
+A.~C. Bannwart, Integrated reservoir and production modeling: Lecture 1 - introduction, Notas de aula da disciplina PP590: Tópicos em Geoengenharia de Reservatórios (09 2023).
+
+\end{thebibliography}

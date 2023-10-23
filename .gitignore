@@ -162,3 +162,8 @@ cython_debug/
 
 *.code-workspace
 tests/plots/
+tempCodeRunnerFile.py
+*.aux
+*.out
+*.spl
+*.gz

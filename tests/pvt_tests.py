@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 path = os.path.abspath(os.path.dirname(__file__))
 def save_plot(plt, name):
-    plt.savefig(path+'/plots/'+name+'.png')
+    plt.savefig(path+'/plots/pvt/'+name+'.png')
     # plt.show()
 
 def rs_test():
@@ -114,7 +114,7 @@ def bo_test():
     pvt2.set_dg(0.8)
     pvt2.set_t(80.)
 
-    p_init = 100
+    p_init = 10
     p_end = 400
     steps = 500
     p = [p_init + i/(steps-1)*(p_end - p_init) for i in range(steps)]
