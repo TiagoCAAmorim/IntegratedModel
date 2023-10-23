@@ -20,13 +20,13 @@ def simple_plot(x,y, x_label, y_label, title, file):
 
 def define_common_parameters(trunk):
     trunk.pvt.set_api(15.)
-    trunk.pvt.set_gor(20.)
+    trunk.pvt.set_gor(2.)
     trunk.pvt.set_dg(0.6)
 
     trunk.set_d(6. * 2.54/100.)
     trunk.set_e(0.6 / 1000.)
 
-    trunk.set_p_in(340.)
+    trunk.set_p_in(300.)
     trunk.set_t_in(50.)
 
     trunk.set_q_std(1000.)
@@ -50,12 +50,12 @@ def horizontal_test():
     print(f'    Pressure out: {trunk.get_p_out():.3f} bar.')
 
 def vertical_test():
-    print('1000 m Vertical trunk')
+    print('1600 m Vertical trunk')
     trunk = flow.SubFlowElement()
     define_common_parameters(trunk)
     trunk.set_h(1600.)
     trunk.set_z_in(0.)
-    trunk.set_z_out(1000.)
+    trunk.set_z_out(1600.)
     print('  Calculation from Inlet to Outlet')
     trunk.solve_out_flow()
     print(f'    Pressure in: {trunk.get_p_in():.3f} bar.')
@@ -101,13 +101,13 @@ def horizontal_divided_test():
     save_plot(plt,'horizontal')
 
 def vertical_divided_test():
-    print('1000 m Vertical trunk with divisions')
+    print('1600 m Vertical trunk with divisions')
     trunk = flow.FlowElement(debug_mode=debug_mode)
     define_common_parameters(trunk)
     trunk.set_number_divisions(10)
     trunk.set_h(1600.)
     trunk.set_z_in(0.)
-    trunk.set_z_out(1000.)
+    trunk.set_z_out(1600.)
 
     print('  Calculation from Inlet to Outlet')
     trunk.solve_out_flow()
@@ -134,16 +134,16 @@ def vertical_divided_test():
     save_plot(plt,'vertical')
 
 def vertical_sensibility_test():
-    print('1000 m Vertical trunk with divisions - sensibility')
+    print('1600 m Vertical trunk with divisions - sensibility')
     trunk = flow.FlowElement(debug_mode=False)
     define_common_parameters(trunk)
     trunk.set_h(1600.)
     trunk.set_z_in(0.)
-    trunk.set_z_out(1000.)
+    trunk.set_z_out(1600.)
     print('  Calculation from Inlet to Outlet')
     print(f'    Pressure in: {trunk.get_p_in()[0]:.3f} bar.')
 
-    n_list = [1, 5, 10, 20, 50, 100, 500, 1000]
+    n_list = [pow(2,i) for i in range(10)]
     p_list = []
     for n in n_list:
         trunk.set_number_divisions(n)
@@ -152,8 +152,8 @@ def vertical_sensibility_test():
         print(f'    Pressure out ({n} segments): {p_list[-1]:.3f} bar.')
 
     _ = plt.figure()
-    plt.plot(n_list, p_list)
-    plt.grid()
+    plt.semilogx(n_list, p_list,'-ob')
+    plt.grid(True, which='both')
     plt.xlabel('Number of segments in calculation')
     plt.ylabel('p out [bar]')
     plt.title('Vertical Trunk')
@@ -200,7 +200,7 @@ def horizontal_two_elements_test():
     save_plot(plt,'horizontal2')
 
 def vertical_two_elements_test():
-    print('1000 m Horizontal trunk as two elements')
+    print('1600 m Vetical trunk as two elements')
     trunk = flow.CompositeFlowElement(debug_mode=debug_mode)
     define_common_parameters(trunk)
     trunk.set_number_divisions(5)
@@ -208,12 +208,12 @@ def vertical_two_elements_test():
     trunk.add_element()
     trunk.current_element.set_h(800.)
     trunk.current_element.set_z_in(0.)
-    trunk.current_element.set_z_out(500.)
+    trunk.current_element.set_z_out(800.)
 
     trunk.add_element()
     trunk.current_element.set_h(800.)
-    trunk.current_element.set_z_in(500.)
-    trunk.current_element.set_z_out(1000.)
+    trunk.current_element.set_z_in(800.)
+    trunk.current_element.set_z_out(1600.)
 
     print('  Calculation from Inlet to Outlet')
     trunk.solve_out_flow()
@@ -424,5 +424,3 @@ if __name__ == "__main__":
     system_ex1()
     system_ex1_vfp()
     system_ex1_sensibility()
-
-    pass
