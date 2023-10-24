@@ -244,7 +244,7 @@ country={Brasil}}
             \label{fig:pb}
         \end{figure}
 
-        Para o problema proposto é informado um fluido de baixa razão gás-óleo. Como a pressão de bolha deste fluido (11.83 bar) é muito próxima da menor pressão do sistema a ser modelado (10 bar), será possível ter uma boa estimativa considerando apenas óleo no sistema. Um problema que aparece é o do comportamento do fator volume de formação ($Bo$), pois o fluido estará submetido a uma pressão muito maior que a sua pressão de bolha. Usualmente é suficiente usar a aproximação linear para calcular o $Bo$ de um óleo subsaturado (equação \ref{eq:bo_linear}). Foi avaliado o efeito de considerar a forma \emph{exponencial} no cálculo do $Bo$ (equação \ref{eq:bo_exponencial}). Observa-se que para o fluido do problema proposto existe uma diferenciando não desprezível no $Bo$ em função da formulação utilizada (figura \ref{fig:bo_problema_proposto}). Optou-se por utilizar a forma \emph{exponencial} por padrão em todos os cálculos.
+        Para o problema proposto é informado um fluido de baixa razão gás-óleo. Como a pressão de bolha deste fluido (11.83 bar a 50$^o$C) é muito próxima da menor pressão do sistema a ser modelado (10 bar), será possível ter uma boa estimativa considerando apenas óleo no sistema. Um problema que aparece é o do comportamento do fator volume de formação ($Bo$), pois o fluido estará submetido a uma pressão muito maior que a sua pressão de bolha. Usualmente é suficiente usar a aproximação linear para calcular o $Bo$ de um óleo subsaturado (equação \ref{eq:bo_linear}). Foi avaliado o efeito de considerar a forma \emph{exponencial} no cálculo do $Bo$ (equação \ref{eq:bo_exponencial}). Observa-se que para o fluido do problema proposto existe uma diferenciando não desprezível no $Bo$ em função da formulação utilizada (figura \ref{fig:bo_problema_proposto}). Optou-se por utilizar a forma \emph{exponencial} por padrão em todos os cálculos.
 
         \begin{align}
           B_o &= B_{ob} [1 + c_{ob}(p_b-p)] \label{eq:bo_linear} \\
@@ -258,13 +258,15 @@ country={Brasil}}
             \label{fig:bo_problema_proposto}
         \end{figure}
 
+        Todos os testes realizados com as funcionalidades implementadas estão no arquivo \texttt{pvt\_tests.py}.
+
     \subsection{Índice de Produtividade \emph{(Módulo \texttt{ipr.py})}}
 
         Para este problema o modelo de reservatório será substituído por um índice de produtividade ($40\,m^3/d/bar$). Assumiu-se que esta medida segue a prática mais usual de que a vazão de óleo está em condições padrão.
 
         Neste módulo está descrito apenas uma classe: \textbf{IPR}. O usuário precisa fornecer a pressão média do reservatório e o valor do índice de produtividade. Uma função retorna a vazão, em condições padrão, em função da pressão de fundo ($p_{wf}$).
 
-        Foi implementada uma função para estimativa do índice de produtividade a partir de parâmetros de reservatório. Foram implementadas duas variações do cálculo do índice de produtividade \cite{rosa2006engenharia}: fluxo pseudopermanente (\ref{eq:ip_pseudoperm}) e fluxo permanente (\ref{eq:ip_perm}).
+        Foi implementada uma função para estimativa do índice de produtividade a partir de parâmetros de reservatório. Foram implementadas duas variações do cálculo do índice de produtividade \cite{rosa2006engenharia}: fluxo pseudopermanente (equação \ref{eq:ip_pseudoperm}) e fluxo permanente (equação \ref{eq:ip_perm}).
 
         \begin{align}
           IP_{pseudoperm} [m^3/d/bar] &= \frac{k[mD] \, h[m]}{18.662 \, B_o \, \mu[cP]} \frac{1}{\left[ ln(\frac{r_e}{r_w}) - \frac{3}{4} + S \right] } \label{eq:ip_pseudoperm} \\
@@ -276,12 +278,12 @@ country={Brasil}}
         Neste módulo foram definidas três classes de objetos:
 
         \begin{itemize}
-          \item \texttt{SubFlowElement}: Classe onde são feitos os cálculos de balanço. Tem rotinas para cálculo de $(p,T)$ na saída do elemento em função de $(p,T)$ na entrada. E vice-versa.
-          \item \texttt{FlowElement}: Classe que tem uma coleção de \texttt{SubFlowElement}. O usuário define um elemento linear (riser, flow etc.), suas propriedades (diâmetro, rugosidade, PVT etc.) e a sua discretização. Uma rotina de cálculo faz os cálculos de balanço com os \texttt{SubFlowElement}.
-          \item \texttt{CompositeFlowElement}: Classe que contém uma coleção de \texttt{FlowElement}. Nesta classe o usuário define vários elementos lineares conectados entre si, com todas as suas propriedades. A rotina realiza os cálculos de balanço utilizando os \texttt{FlowElement}. Também é possível definir uma IPR e fazer os cálculos do ponto de operação com o método da secante \cite{burden2016analise}.
+          \item \texttt{SubFlowElement}: Classe onde são feitos os cálculos de balanço. Tem rotinas para cálculo de $(p,T,Q)$ na saída do elemento em função de $(p,T,Q)$ na entrada. E vice-versa.
+          \item \texttt{FlowElement}: Classe que tem uma coleção de \texttt{SubFlowElement}. O usuário define um elemento linear (riser, flow etc.), suas propriedades (diâmetro, rugosidade, PVT etc.) e a sua discretização. Uma rotina de cálculo faz os cálculos de balanço dividindo o elmento em vários \texttt{SubFlowElement}.
+          \item \texttt{CompositeFlowElement}: Classe que contém uma coleção de \texttt{FlowElement}. Nesta classe o usuário define vários elementos lineares conectados entre si, com todas as suas propriedades. A rotina realiza os cálculos de balanço utilizando os \texttt{FlowElement}. A ordem dos elementos segue a direção do fluxo. Também é possível definir uma IPR e fazer os cálculos do ponto de operação com o método da secante \cite{burden2016analise}.
         \end{itemize}
 
-        Para resolver o problema proposto foram implementadas rotinas de cálculo do balanço de massa (\ref{eq:balanco_massa}) e do balanço de energia mecânica (\ref{eq:balanco_mecanico}). O termo de ganho associado a turbomáquinas não foi implementado ($H_{tm}$). Como o problema proposto é isotérmico, o balanço de energia térmica não foi implementado.
+        Para resolver o problema proposto foram implementadas rotinas de cálculo do balanço de massa (equação \ref{eq:balanco_massa}) e do balanço de energia mecânica (equação \ref{eq:balanco_mecanico}). O termo de ganho associado a turbomáquinas não foi implementado ($H_{tm}$). Como o problema proposto é isotérmico, o balanço de energia térmica não foi implementado.
 
         Todos os cálculos são feitos por elemento linear, avaliando os termos das equações na entrada ($in$) e na saída ($out$). Apenas o termo $\overline{\rho}$ é avaliado na pressão \emph{média} do elemento ($\frac{p_{in}+p_{out}}{2}$). Como a pressão \emph{média} depende de ambas pressões de entrada e saída, é feito um processo iterativo para chegar ao resultado.
 
@@ -290,7 +292,7 @@ country={Brasil}}
           p_{in} - p_{out} &= \overline{\rho} g \left[ (z_{out} - z_{in}) + H_L - H_{tm} + \frac{V_{out}^2 - V_{in}^2}{2g} \right] \label{eq:balanco_mecanico}
         \end{align}
 
-        A perda de carga devido à fricção é calculada com a fórmula da Hall (\ref{eq:ff}). O termo $V$ de \ref{eq:hloss} é avaliado na pressão \emph{média} do elemento.
+        A perda de carga devido à fricção (equação \ref{eq:hloss}) é calculada com o fator de fricção da fórmula da Hall (equação \ref{eq:ff}). O termo $V$ da equação \ref{eq:hloss} é avaliado na pressão \emph{média} do elemento.
 
         \begin{align}
           Re &= \frac{4 \, \dot{m}}{\pi \, \mu \, D} \label{eq:reynolds} \\
@@ -302,15 +304,16 @@ country={Brasil}}
           H_L &= f \frac{L \, V^2}{D \, 2g} \label{eq:hloss}
         \end{align}
 
+        Todos os testes realizados com as funcionalidades implementadas estão no arquivo \texttt{flow\_tests.py}.
 
 \section{Resultados}
 
         Foram criados diferentes testes para avaliar a qualidade dos resultados das rotinas implementadas:
 
         \begin{itemize}
-          \item Em geral os testes foram feitos nas \emph{duas direções}, isto é, informando $(p,T)$ e vazão de entrada e calculando os valores de saída e o inverso. Desta forma foi possível avaliar a estabilidade das rotinas.
+          \item Em geral os testes foram feitos nas \emph{duas direções}, isto é, informando $(p,T,Q)$ na entrada e calculando os valores de saída, e também o inverso. Desta forma foi possível avaliar a estabilidade das rotinas. Em todos os testes os valores mantiveram concordância.
           \item Para o fluido do problema proposto a queda de pressão no trecho horizontal se mostrou bem pequena (figura \ref{fig:linha_horizontal}).
-          \item O cálculo da pressão de saída de uma linha vertical se mostrou pouco sensível ao número de subdivisões do elemento (figura \ref{fig:linha_vertical}).
+          \item O cálculo da pressão de saída de uma linha vertical se mostrou pouco sensível ao número de subdivisões do elemento (figura \ref{fig:linha_vertical}). Menos de 100 elementos foram suficientes para estimar a pressão de saída.
         \end{itemize}
 
         \begin{figure}
@@ -381,7 +384,7 @@ country={Brasil}}
           \label{fig:resultados}
         \end{figure}
 
-        Foram feitas algumas sensibilidades do ponto de operação com variáveis do problema: pressão de chegada e diâmetro da tubulação (figuras \ref{fig:sensibilidade}). A pressão de chegada apresentou uma correlação linear com a vazão do ponto de operação do sistema. A sensibilidade do diâmetro indica que a área aberta ao fluxo tem relação linear com a vazão.
+        Foram feitas algumas sensibilidades do ponto de operação com variáveis do problema: pressão de chegada e diâmetro da tubulação (figuras \ref{fig:sensibilidade}). A pressão de chegada apresentou uma correlação linear com a vazão do ponto de operação do sistema. A sensibilidade do diâmetro mostrou uma relação menos que linear com a vazão.
 
         \begin{figure}
           \centering

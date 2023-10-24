@@ -82,7 +82,7 @@ def horizontal_divided_test():
     print(f'    Pressure out: {line.get_p_out()[-1]:.3f} bar.')
 
     _ = plt.figure()
-    plt.plot([0] + line.get_h_cumulative(), [line.get_p_in()[0]] + line.get_p_out())
+    plt.plot([0] + line.get_h_cumulative(), [line.get_p_in()[0]] + line.get_p_out(), 'b-')
 
     print('  Calculation from Outlet to Inlet')
     line.set_p_in(None)
@@ -91,7 +91,7 @@ def horizontal_divided_test():
     print(f'    Pressure in: {line.get_p_in()[0]:.3f} bar.')
     print(f'    Pressure out: {line.get_p_out()[-1]:.3f} bar.')
 
-    plt.plot([0] + line.get_h_cumulative(), line.get_p_in() + [line.get_p_out()[-1]])
+    plt.plot([0] + line.get_h_cumulative(), line.get_p_in() + [line.get_p_out()[-1]], 'r--')
     ax = plt.gca()
     ax.legend(['Inlet to Outlet', 'Outlet to Inlet'])
     plt.grid()
