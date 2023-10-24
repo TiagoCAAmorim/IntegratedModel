@@ -167,3 +167,5 @@ tempCodeRunnerFile.py
 *.out
 *.spl
 *.gz
+*.blg
+*.bbl
