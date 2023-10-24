@@ -9,8 +9,8 @@ class IPR:
 
         self.variables = common.VariablesList({
             'pi':['Productivity index', 'm3/d/bar'],
-            'pr':['Reservoir pressure', 'bar'],
-            're':['Reservoir equivalent radius', 'm'],
+            'pe':['Drainage area mean pressure', 'bar'],
+            're':['Drainage radius', 'm'],
             'rw':['Well radius', 'm'],
             'u':['Produced fluids mixture viscosity', 'cP'],
             'k':['Effective permeability', 'mD'],
@@ -30,6 +30,12 @@ class IPR:
     def get_q(self, pwf):
         return self._pi * (self._pr - pwf)
 
-    def calculate_simple_pi(self, re, rw, k, mu, h):
-        c = 2 * math.pi / (math.log(re / rw) - 3/4)
-        self._pi = c * k * h / mu # Needs unit conversion!
+    def calculate_pi_pseudopermanent(self, re, rw, k, mu, h, Bo, S):
+        a = 1 / 18.662 # 19.03 * 0.980665
+        c = 1 / (math.log(re / rw) - 3/4 + S)
+        self._pi = a * c * k * h / (Bo * mu)
+
+    def calculate_pi_permanent(self, re, rw, k, mu, h, Bo, S):
+        a = 1 / 18.662 # 19.03 * 0.980665
+        c = 1 / (math.log(re / rw) - 1/2 + S)
+        self._pi = a * c * k * h / (Bo * mu)
