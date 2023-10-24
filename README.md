@@ -1,6 +1,12 @@
 # Integrated Model
 Code for an integrated reservoir-production model
 
+`sample`: Modules in Python
+
+`tests` Python scripts that test the modules
+
+`docs`: Reports on the modules and tests (in Portuguese)
+
 ## Oil Properties
 
 * Defined two correlations for the bubble pressure:
