@@ -24,12 +24,12 @@
 \usepackage{amsmath}
 \usepackage{multirow}
 
-\usepackage{subfigure}
-
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
 \usepgfplotslibrary{statistics}
 \usepackage{pgfplotstable}
+\usepackage{caption}
+\usepackage{subcaption}
 
 \usepackage{placeins}
 \usepackage{hyperref}
@@ -233,444 +233,177 @@ country={Brasil}}
             \item Compressibilidade do óleo na pressão de bolha por Vasquez e Beggs \cite{VasquezBeggs}.
         \end{itemize}
 
-        Não foram necessárias para resolver o problema proposto, mas também foram implementadas correlações para cálculo de propriedades de gás (z, Bg) com correlações de Standing.
+        Não foram necessárias para resolver o problema proposto, mas também foram implementadas correlações para cálculo de propriedades de gás com correlações de Standing (z e Bg).
 
-        Dentro do módulo \texttt{pvt.py} existe a descrição de um objeto: \textbf{PVT}. O usuário precisa informar algumas informações básicas (api, pressão, temperatura, dg etc.) e pode usar as rotinas desenvolvidas para calcular outras propriedades com as correlações. Uma forma de avaliar a implementação foi refazer os mesmos gráficos que foram apresentados em aula \cite{aula01} (Figuras \ref{fig:grid_pvt} e \ref{fig:grid_pvt_gas}).
-
-        \begin{figure}
-            \centering
-            \subfigure[Razão de solubilidade para diferentes parâmetros.]{
-              \includegraphics[width=0.45\textwidth]{pvt/rs.png}
-            }
-            \subfigure[Pressão de bolha pela correlação de Standing e invertendo a correlação de razão de solubilidade.]{
-              \includegraphics[width=0.45\textwidth]{pvt/p_bubble.png}
-            } \label{subfig:imagea}
-
-            \subfigure[Pressão de bolha para diferentes parâmetros.]{
-              \includegraphics[width=0.45\textwidth]{pvt/p_bubble2.png}
-            }
-            \subfigure[Fator volume de formação do óleo para diferentes parâmetros.]{
-              \includegraphics[width=0.45\textwidth]{pvt/bo.png}
-            }
-
-            \subfigure[Densidade do óleo para diferentes parâmetros.]{
-              \includegraphics[width=0.45\textwidth]{pvt/rhoo.png}
-            }
-            \subfigure[Viscosidade do óleo para diferentes parâmetros.]{
-              \includegraphics[width=0.45\textwidth]{pvt/uo.png}
-            }
-
-            \caption{Variação de propriedades de óleo com as correlações implementadas.}
-            \label{fig:gridpvt}
-          \end{figure}
-
+        Dentro do módulo \texttt{pvt.py} existe a descrição de uma classe: \textbf{PVT}. O usuário precisa informar algumas informações básicas (api, pressão, temperatura, dg etc.) e pode usar as rotinas desenvolvidas para calcular outras propriedades com as correlações. Observou-se que existe um desvio entre a correlação de Standing para pressão de bolha e a inversão da correlação de razão de solubilidade (figura \ref{fig:pb}). Para manter coerência entre as diferentes estimativas, optou-se por utilizar no cálculo da pressão de boha a fórmula invertida a partir da correlação de razão de solubilidade. O usuário ainda tem acesso à correlação original de Standing.
 
         \begin{figure}
             \centering
-            \subfigure[Densidade do gás para diferentes parâmetros.]{
-              \includegraphics[width=0.45\textwidth]{pvt/rhog.png}
-            }
-            \subfigure[Fator volume de formação do gás para diferentes parâmetros.]{
-              \includegraphics[width=0.45\textwidth]{pvt/bg.png}
-            }
-            \subfigure[Parâmetros z do gás para diferentes parâmetros.]{
-              \includegraphics[width=0.45\textwidth]{pvt/z.png}
-            }
+            \includegraphics[width=0.6\textwidth]{pvt/p_bubble.png}
+            \caption{Pressão de bolha pela correlação de Standing (\emph{Original}) e invertendo a correlação de razão de solubilidade de Standing (\emph{Modified}).}
+            \label{fig:pb}
+        \end{figure}
 
-            \caption{Variação de propriedades de gás com as correlações implementadas.}
-            \label{fig:grid_pvt_gas}
-          \end{figure}
+        Para o problema proposto é informado um fluido de baixa razão gás-óleo. Como a pressão de bolha deste fluido (11.83 bar) é muito próxima da menor pressão do sistema a ser modelado (10 bar), será possível ter uma boa estimativa considerando apenas óleo no sistema. Um problema que aparece é o do comportamento do fator volume de formação ($Bo$), pois o fluido estará submetido a uma pressão muito maior que a sua pressão de bolha. Usualmente é suficiente usar a aproximação linear para calcular o $Bo$ de um óleo subsaturado (equação \ref{eq:bo_linear}). Foi avaliado o efeito de considerar a forma \emph{exponencial} no cálculo do $Bo$ (equação \ref{eq:bo_exponencial}). Observa-se que para o fluido do problema proposto existe uma diferenciando não desprezível no $Bo$ em função da formulação utilizada (figura \ref{fig:bo_problema_proposto}). Optou-se por utilizar a forma \emph{exponencial} por padrão em todos os cálculos.
 
-          Observa-se que existe um desvio entre a correlação de Standing para pressão de bolha e a inversão da correlação de razão de solubilidade (figura \subref{subfig:imagea}). Para manter coerência entre as diferentes estimativas, optou-se por utilizar \emph{por padrão} no cálculo da pressão de boha a fórmula invertida a partir da correlação de razão de solubilidade. O usuário ainda tem acesso à correlação original de Standing.
+        \begin{align}
+          B_o &= B_{ob} [1 + c_{ob}(p_b-p)] \label{eq:bo_linear} \\
+          B_o &= B_{ob} e^{c_{ob}(p_b-p)} \label{eq:bo_exponencial}
+        \end{align}
 
-          Para o problema proposto é informado um fluido de baixa razão gás-óleo. Como a pressão de bolha deste fluido (11.83 bar) é muito próxima da menor pressão do sistema a ser modelado (10 bar), será possível ter uma boa estimativa considerando apenas óleo no sistema. Um problema que aparece é o comportamento do fator volume de formação ($Bo$), pois o fluido estará submetido a uma pressão muito maior que a sua pressão de bolha. Foi avaliado o efeito de considerar a forma \emph{exponencial} de cálculo do $Bo$, ao invés de usar a forma \emph{linear}, que é uma aproximação da primeira (). Observa-se que para o fluido do problema proposto existe uma variação no $Bo$ em função da formulação utilizada (figura \ref{fig:bo_problema_proposto}), mas não é significativa. Para fluidos menos subsaturados a diferença é ainda menor (figura ).
-
-          \begin{figure}
+        \begin{figure}
             \centering
-            \includegraphics[width=0.45\textwidth]{pvt/bo2.png}
-            \caption{Estimativa de fator voluma de formação para o fluido do problema proposto.}
+            \includegraphics[width=0.6\textwidth]{pvt/bo2.png}
+            \caption{Estimativa de fator volume de formação para o fluido do problema proposto.}
             \label{fig:bo_problema_proposto}
         \end{figure}
 
+    \subsection{Índice de Produtividade \emph{(Módulo \texttt{ipr.py})}}
 
-    %     Um dos modelos de aquífero analítico mais difundidos é o de Fetkovich \cite{schlumberger2009technical} \cite{computer2022cmg} \cite{rosa2006engenharia}. O método de Fetkovich se baseia em um modelo transiente, e em muitos casos se aproxima das respostas do método de van Everdingen-Hurst \cite{VanEverdingen-Hurst}. A vantagem do método de Fetkovich é a simplicidade de sua aplicação, pois não depende de técnicas de superposição.
+        Para este problema o modelo de reservatório será substituído por um índice de produtividade ($40\,m^3/d/bar$). Assumiu-se que esta medida segue a prática mais usual de que a vazão de óleo está em condições padrão.
 
-    %     O modelo de Fetkovich assume que a contribuição de um aquífero pode ser adequadamente modelada por um índice de produtividade, ou seja, que o influxo de água do aquífero para o reservatório é diretamente proporcional à diferença entre a pressão média do aquífero e a pressão na interface entre o reservatório e o aquífero \cite{fetkovich1971simplified}. O método negligencia quaisquer efeitos transientes no aquífero. O efeito desta premissa será maior em casos onde existe uma \emph{rápida} variação na pressão na interface entre o reservatório e o aquífero, fazendo com que os resultados do método de Fetkovich se desviem dos resultados mais rigorosos do método de van Everdingen-Hurst \cite{AHMED2019663}. Para problemas em que a variação desta pressão é mais gradual, o método de Fetkovich apresenta bons resultados.
+        Neste módulo está descrito apenas uma classe: \textbf{IPR}. O usuário precisa fornecer a pressão média do reservatório e o valor do índice de produtividade. Uma função retorna a vazão, em condições padrão, em função da pressão de fundo ($p_{wf}$).
 
-    %     O método primeiramente assume um índice de produtividade constante para o aquífero:
+        Foi implementada uma função para estimativa do índice de produtividade a partir de parâmetros de reservatório. Foram implementadas duas variações do cálculo do índice de produtividade \cite{rosa2006engenharia}: fluxo pseudopermanente (\ref{eq:ip_pseudoperm}) e fluxo permanente (\ref{eq:ip_perm}).
 
-    %     \begin{align}
-    %         Q_w = \frac{dW_e}{dt} = J (p_{aq} - p_{res})& \label{eq:j}
-    %     \end{align}
+        \begin{align}
+          IP_{pseudoperm} [m^3/d/bar] &= \frac{k[mD] \, h[m]}{18.662 \, B_o \, \mu[cP]} \frac{1}{\left[ ln(\frac{r_e}{r_w}) - \frac{3}{4} + S \right] } \label{eq:ip_pseudoperm} \\
+          IP_{permanente} [m^3/d/bar] &= \frac{k[mD] \, h[m]}{18.662 \, B_o \, \mu[cP]} \frac{1}{\left[ ln(\frac{r_e}{r_w}) - \frac{1}{2} + S \right] } \label{eq:ip_perm}
+        \end{align}
 
-    %     A equação de balanço de massa assume que a compressibilidade do aquífero é constante, e que a depleção é proporcional à redução do volume de água:
+        \subsection{Equações de Balanço \emph{(Módulo \texttt{flow.py})}}
 
-    %     \begin{align}
-    %         W_e = c_{aq} W_{i,aq} (p_{i,aq} - p_{aq})& \label{eq:compAquif}
-    %     \end{align}
+        Neste módulo foram definidas três classes de objetos:
 
-    %     A partir de \ref{eq:compAquif} é possível encontrar uma equação para a pressão média do aquífero:
+        \begin{itemize}
+          \item \texttt{SubFlowElement}: Classe onde são feitos os cálculos de balanço. Tem rotinas para cálculo de $(p,T)$ na saída do elemento em função de $(p,T)$ na entrada. E vice-versa.
+          \item \texttt{FlowElement}: Classe que tem uma coleção de \texttt{SubFlowElement}. O usuário define um elemento linear (riser, flow etc.), suas propriedades (diâmetro, rugosidade, PVT etc.) e a sua discretização. Uma rotina de cálculo faz os cálculos de balanço com os \texttt{SubFlowElement}.
+          \item \texttt{CompositeFlowElement}: Classe que contém uma coleção de \texttt{FlowElement}. Nesta classe o usuário define vários elementos lineares conectados entre si, com todas as suas propriedades. A rotina realiza os cálculos de balanço utilizando os \texttt{FlowElement}. Também é possível definir uma IPR e fazer os cálculos do ponto de operação com o método da secante \cite{burden2016analise}.
+        \end{itemize}
 
-    %     \begin{align}
-    %         p_{aq} &= p_{i,aq} \left( 1 - \frac{W_e}{c_{aq} W_{i,aq} p_{i,aq}} \right) \nonumber \\
-    %         &= p_{i,aq} \left( 1 - \frac{W_e}{W_{e,max}} \right) \label{eq:pAquif}
-    %     \end{align}
+        Para resolver o problema proposto foram implementadas rotinas de cálculo do balanço de massa (\ref{eq:balanco_massa}) e do balanço de energia mecânica (\ref{eq:balanco_mecanico}). O termo de ganho associado a turbomáquinas não foi implementado ($H_{tm}$). Como o problema proposto é isotérmico, o balanço de energia térmica não foi implementado.
 
-    %     Diferenciando \ref{eq:pAquif} no tempo:
+        Todos os cálculos são feitos por elemento linear, avaliando os termos das equações na entrada ($in$) e na saída ($out$). Apenas o termo $\overline{\rho}$ é avaliado na pressão \emph{média} do elemento ($\frac{p_{in}+p_{out}}{2}$). Como a pressão \emph{média} depende de ambas pressões de entrada e saída, é feito um processo iterativo para chegar ao resultado.
 
-    %     \begin{align}
-    %         \frac{dp_{aq}}{dt} &= - \frac{p_{i,aq}}{W_{e,max}} \frac{dW_e}{dt} \label{eq:dpaqdt}
-    %     \end{align}
+        \begin{align}
+          \frac{dm}{dt} &= \dot{m}  = \rho_{in} V_{in} A_{in} = \rho_{out} V_{out} A_{out} \label{eq:balanco_massa} \\
+          p_{in} - p_{out} &= \overline{\rho} g \left[ (z_{out} - z_{in}) + H_L - H_{tm} + \frac{V_{out}^2 - V_{in}^2}{2g} \right] \label{eq:balanco_mecanico}
+        \end{align}
 
-    %     Isolando $p_{aq}$ em \ref{eq:j} e diferenciando no tempo:
+        A perda de carga devido à fricção é calculada com a fórmula da Hall (\ref{eq:ff}). O termo $V$ de \ref{eq:hloss} é avaliado na pressão \emph{média} do elemento.
 
-    %     \begin{align}
-    %         \frac{dp_{aq}}{dt} &= \frac{1}{J} \frac{d^2W_e}{dt^2} + \frac{dp_{res}}{dt} \label{eq:dpaqdt2}
-    %     \end{align}
-
-    %     Igualando \ref{eq:dpaqdt} e \ref{eq:dpaqdt2}:
-
-    %     \begin{align}
-    %         \frac{d^2W_e}{dt^2} &= - \frac{J p_{i,aq}}{W_{e,max}} \frac{dW_e}{dt} - J \frac{dp_{res}}{dt} \label{eq:dwe2dt2}
-    %     \end{align}
-
-    %     Assumindo uma pressão constante na interface entre o aquífero e o reservatório ($\frac{dp_{res}}{dt} = 0$) e lembrando que $p_{aq}(t=0)=p_{i,aq}$, é possível resolver a EDO \ref{eq:dwe2dt2}:
-
-    %     \begin{align}
-    %         \frac{dW_e}{dt} &= J (p_{i,aq} - p_{res}) e^{\frac{J p_{i,aq}}{W_{e,max}} t} \label{eq:dwedt}
-    %     \end{align}
-
-    %     Integrando \ref{eq:dwedt} no tempo com $W_e(t=0)=0$:
-
-    %     \begin{align}
-    %         W_e &= \frac{W_{e,max}}{p_{i,aq}} (p_{i,aq} - p_{res}) \left( 1- e^{\frac{J p_{i,aq}}{W_{e,max}} t} \right) \label{eq:we}
-    %     \end{align}
-
-    %     Como a suposição de pressão constante na interface entre o aquífero e o reservatório é muito forte, Fetkovich propõe aplicar \ref{eq:we} de maneira incremental. Para um tempo $t_j$ com $j=1,2,\ldots,n$:
-
-    %     \begin{align}
-    %         (\Delta W_e)_j &= \frac{W_{e,max}}{p_{i,aq}} ((\overline{p}_{i,aq})_{j-1} - (\overline{p}_{res})_j) \left( 1- e^{\frac{J p_{i,aq}}{W_{e,max}} \Delta t_j} \right) \label{eq:deltawe}
-    %     \end{align}
-
-    %     \noindent
-    %     onde
-
-    %     \begin{align}
-    %         (\overline{p}_{res})_j &= \frac{(p_{res})_j + (p_{res})_{j-1}}{2} \label{eq:presmedio}
-    %     \end{align}
-
-    %     \begin{align}
-    %         (\overline{p}_{i,aq})_j &= p_{i,aq} \left( 1 - \frac{(\Delta W_e)_j}{W_{e,max}} \right) \label{eq:paqmedio}
-    %     \end{align}
-
-    %     Com $(p_{res})_0 = p_{i,res}$ e $(\overline{p}_{i,aq})_0 = p_{i,aq}$.
-
-    %     Ao final do procedimento, o volume de água que passa do aquífero ao reservatório é a soma dos incrementos:
-
-    %     \begin{align}
-    %         W_e = \sum_{j = 1}^{n}  (\Delta W_e)_j \label{eq:wetotal}
-    %     \end{align}
-
-    %     O termo da pressão no aquífero é calculado no passo de tempo anterior. O único termo que não pode ser calculado diretamente é $(p_{res})_j$. Como este termo é normalmente função, entre outros, do influxo de água ($\sum_{j} (\Delta W_e)_j$), a cada passo de tempo é preciso resolver um problema do tipo $y = g(y)$.
-
-    % \subsection{Método de Euler}
-
-    %     O objetivo do método de Euler é encontrar uma aproximação da solução de um problema de valor inicial bem posto (PVI):
-
-    %     \begin{align}
-    %         \frac{dy}{dt} = f(t,y), \quad a \leq t \leq b, \quad y(a) = \alpha \label{eq:pvi}
-    %     \end{align}
-
-    %     É possível usar o Teorema de Taylor para estimar o valor de $y(t_{j+1})$ a partir do valor de $y(t_j)$. Assumindo $y(t_{j+1}) - y(t_j) = h$ e com $\xi_j \; \epsilon \; (t_j, t_{j+1})$:
-
-    %     \begin{align}
-    %         y(t_{j+1}) = y(t_j) + h \left. \frac{dy}{dt} \right|_{t_j} + \frac{h^2}{2} \left. \frac{d^2y}{dt^2} \right|_{\xi_j} \label{eq:taylor}
-    %     \end{align}
-
-    %     Substituindo \ref{eq:pvi} em \ref{eq:taylor} e ignorando o resto, chega-se ao método de Euler. Fazendo $w_j \approx y(t_j)$, aplicando a discretização em $t$ em $n$ passos e a condição inicial:
-
-    %     \begin{align}
-    %         h &= \frac{b-a}{n} \nonumber \\
-    %         t_j &= a + h j \nonumber \\
-    %         w_0 &= \alpha \nonumber \\
-    %         w_j &= w_{j-1} + h f(t_{j-1}, w_{j-1}) \label{eq:euler}
-    %     \end{align}
-
-    %     É possível mostrar que o limitante do erro do método de Euler é dado por\footnote{Prova completa em \cite{burden2016analise}}:
-
-    %     \begin{align}
-    %         \left\lvert y(t_j) - w_j \right\rvert &\leq \frac{h M}{2 L} \left[ e^{L(t_j-t_0)} -1 \right]  \label{eq:limitante}
-    %     \end{align}
-
-    %     \noindent
-    %     onde
-
-    %     \begin{align}
-    %         \left\lvert \frac{\partial f}{\partial y} (t,y(t)) \right\rvert &\leq L \label{eq:L} \\
-    %         \left\lvert \frac{d^2y}{dt^2} (t) \right\rvert = \left\lvert \frac{df}{dt} (t,y(t)) \right\rvert =& \nonumber \\
-    %         \left\lvert \frac{\partial f}{\partial t} (t,y(t)) + \frac{\partial f}{\partial y} (t,y(t)) f(t,y(t)) \right\rvert &\leq M \label{eq:M}
-    %     \end{align}
-
-    %     A estimativa do limitante do erro pode ser feita mesmo sem conhecer explicitamente a função $y(t)$. Neste caso os valores de $L$ e $M$ serão estimados com os valores aproximados $w_j$.
-
-    %     \subsection{Modelo de Fetkovich como PVI}
-
-    %     Uma forma de resolver o modelo proposto por Fetkovich sem ter que assumir uma pressão constante na interface entre o aquífero e o reservatório é transformá-lo em um problema de valor inicial.
-
-    %     Vamos assumir um modelo simples de reservatório em que é alcançado equilíbrio hidrostático \emph{instantaneamente}\footnote{Em um instante qualquer todo o reservatório estará na mesma pressão $p_{res}$.}. Por simplicidade é assumido que $Bw=1$.
-
-    %     \begin{align}
-    %         N Bo + W_{res} = Pv  \label{eq:reservatorio}
-    %     \end{align}
-
-    %     Serão assumidas correlações lineares do fator volume de formação do óleo com a pressão, e do volume poroso com a pressão.
-
-    %     \begin{align}
-    %         N Bo_b [1+c_{o,b}(p_b-p_{res})] &+ W_{res} = \nonumber \\
-    %         & Pv_i [1 - c_r (p_{i,res} - p_{res})]  \label{eq:reservatorio2}
-    %     \end{align}
-
-    %     Isolando $p_{res}$ em \ref{eq:reservatorio2}:
-
-    %     \begin{align}
-    %         p_{res} = \frac{N Bo_b (1+c_{o,b} p_b) + W_{res} - Pv_i (1 - c_r p_{i,res})}
-    %         {N Bo_b c_{o,b} + Pv_i c_r }  \label{eq:pres}
-    %     \end{align}
-
-    %     Derivando \ref{eq:pres} no tempo:
-
-    %     \begin{align}
-    %         \frac{dp_{res}}{dt} =& \frac{\frac{dN}{dt} Bo_b (1+c_{o,b} p_b) + \frac{dW_{res}}{dt}}
-    %         {N Bo_b c_{o,b} + Pv_i c_r} + \nonumber \\
-    %         & -p_{res}\frac{\frac{dN}{dt} Bo_b c_{o,b}}{N Bo_b c_{o,b} + Pv_i c_r} \label{eq:dpresdt}
-    %     \end{align}
-
-    %     Substituindo \ref{eq:dpresdt} em \ref{eq:dwe2dt2}, e assumindo $\frac{dN}{dt} = f(t,p_{res})$, encontra-se um PVI da forma:
-
-    %     \begin{align}
-    %         \frac{d^2y}{dt^2} = -\alpha \frac{dy}{dt} - f(t,y), \quad a \leq t \leq b, \quad y(a) = \alpha \label{eq:pvi2}
-    %     \end{align}
-
-
-    %     Para aplicar o método de Euler será preciso focar no caso específico em que não há produção de óleo ($\frac{dN}{dt} = 0$):
-
-    %     \begin{align}
-    %         \frac{d^2W_e}{dt^2} &= - J \left(\frac{p_{i,aq}}{W_{e,max}} + \frac{1}{N Bo_b c_{o,b} + Pv_i c_r} \right)  \frac{dW_e}{dt} \label{eq:dwe2dt2res}
-    %     \end{align}
-
-    %     Como a condição inicial de $p_{aq}(t=0)=p_{i,aq}$ se mantém, a EDO \ref{eq:dwe2dt2res} tem solução analítica análoga a \ref{eq:dwedt}:
-
-    %     \begin{align}
-    %         \frac{dW_e}{dt} &= J (p_{i,aq} - p_{res}) e^{J \left( \frac{p_{i,aq}}{W_{e,max}} + \frac{1}{N Bo_b c_{o,b} + Pv_i c_r} \right)  t} \label{eq:dwedtres}
-    %     \end{align}
-
-    %     Desta forma será possível comparar a resposta exata (\ref{eq:dwedtres}) com as aproximações do método de Fetkovich (\ref{eq:deltawe}) e do método de Euler (\ref{eq:dwe2dt2res}).
-
-
-\section{Implementação} \label{sec:implementacao}
-
-        Todo o código utilizado nesta análise foi desenvolvido em C++. Foram criados objetos próprios para cada elemento integrante do problema proposto:
-
-        % \begin{description}
-        %     \item[IVP] Classe que define um problema de valor inicial na forma \ref{eq:pvi}.
-        %     \begin{itemize}
-        %         \item O usuário precisa especificar $f(t,y)$, $a$ (tempo inicial), $b$ (tempo final), $n$ (número de passos de tempo) e $y(a)$ (valor inicial).
-        %         \item Opcionalmente o usuário pode prover $\frac{\partial f}{\partial y}$ e $\frac{df}{dt}$ para que seja estimado o limitante do erro de aproximação. O usuário também pode prover diretamente os valores de $L$ e $M$.
-        %         \item O usuário também pode especificar a função exata, para calcular o erro de aproximação do método de Euler.
-        %         \item Além do método de Euler \emph{tradicional}, foi implementada uma rotina que tenta melhorar as respostas utilizando o método de Aitken. Nesta opção o método de Euler é feito com 3 diferentes passos de tempo: $n$, $2 n$ e $3 n$. Nos passos de tempo comuns entre as 3 resoluções é aplicado o método de Aitken\footnote{$w^{(n)}_j$ é a aproximação de $y(t_j)$ de uma aplicação do método de Euler com $n$ passos.}:
-        %     \end{itemize}
-
-        %         \begin{align}
-        %             \widehat{w}_j = w^{(n)}_j - \frac{\left(w^{(2n)}_{2j} - w^{(n)}_j\right) ^2}{w^{(3n)}_{3j}-2w^{(2n)}_{2j}+w^{(n)}_j} \label{eq:aitken}
-        %         \end{align}
-
-        %     \item[Spline] Classe que constrói uma função interpoladora do tipo Spline natural a um conjunto de pontos $(x,y)$ \cite{relatoriosplinesnaturais}.
-        %     \begin{itemize}
-        %         \item Os valores das funções que definem $L$ e $M$ dependem de $y(t)$ (que é aproximado por $w$). Estas funções só podem ser avaliadas nos $n$ valores de $w_i$ que são calculados pelo método de Euler.
-        %         \item Esta classe foi incluída no código para incrementar a busca pelos valores de $L$ e $M$. São criadas splines a partir dos valores calculados de cada função, de modo que um número maior de pontos podem ser avaliados.
-        %     \end{itemize}
-        %     \item[Fetkovich] Classe que resolve o comportamento de um aquífero como proposto por Fetkovich.
-        %     \begin{itemize}
-        %         \item O usuário precisa definir as características do aquífero e prover uma função que retorne a pressão na interface do aquífero com o reservatório. Esta função depende do tempo e do influxo acumulado de água do aquífero para o reservatório ($W_e$).
-        %     \end{itemize}
-        % \end{description}
-
-        % Para facilitar a estimativa de parâmetros de aquífero e reservatório foram implementadas algumas correlações \emph{clássicas}:
-
-        % \begin{itemize}
-        %     \item Newman: Compressibilidade de rocha \cite{10.2118/3835-PA}.
-        %     \item Standing: Pressão de bolha, compressibilidade do óleo na pressão de bolha e fator volume de formação do óleo na pressão de bolha \cite{standing1952volumetric}.
-        % \end{itemize}
+        \begin{align}
+          Re &= \frac{4 \, \dot{m}}{\pi \, \mu \, D} \label{eq:reynolds} \\
+          f &=
+          \begin{cases}
+            \frac{64}{Re} & \text{se } Re < 2300 \\
+            0.0055 \left[ 1+ \sqrt[3]{2.\,10^4 \frac{\varepsilon}{D} + \frac{10^6}{Re}}   \right]     & \text{se } Re \geq 2300
+        \end{cases} \label{eq:ff} \\
+          H_L &= f \frac{L \, V^2}{D \, 2g} \label{eq:hloss}
+        \end{align}
 
 
 \section{Resultados}
 
-        Antes de aplicar o método de Euler ao problema proposto, foram avaliados alguns problemas de valor inicial com resposta exata conhecida:
+        Foram criados diferentes testes para avaliar a qualidade dos resultados das rotinas implementadas:
 
-        % \begin{enumerate}
-        %     \item $y' = y - t^2 + 1, \quad 0 \leq t \leq  2, \quad y(0) = 0.5$ \label{item:pvi1}
-        %     \item $y' = -2y + 3 e^t, \quad 0 \leq t \leq  2, \quad y(0) = 3.0$ \label{item:pvi2}
-        %     \item $y' = 4 cos(t) - 8 sin(t) + 2 y, \quad 0 \leq t \leq  2, \quad y(0) = 3.0$ \label{item:pvi3}
-        % \end{enumerate}
+        \begin{itemize}
+          \item Em geral os testes foram feitos nas \emph{duas direções}, isto é, informando $(p,T)$ e vazão de entrada e calculando os valores de saída e o inverso. Desta forma foi possível avaliar a estabilidade das rotinas.
+          \item Para o fluido do problema proposto a queda de pressão no trecho horizontal se mostrou bem pequena (figura \ref{fig:linha_horizontal}).
+          \item O cálculo da pressão de saída de uma linha vertical se mostrou pouco sensível ao número de subdivisões do elemento (figura \ref{fig:linha_vertical}).
+        \end{itemize}
 
-        % Os resultados exatos de cada problema são, respectivamente:
+        \begin{figure}
+          \centering
+          \includegraphics[width=0.6\textwidth]{flow/horizontal.png}
+          \caption{Estimativa de fator volume de formação para o fluido do problema proposto.}
+          \label{fig:linha_horizontal}
+        \end{figure}
 
-        % \begin{enumerate}
-        %     \item $y = (t+1)^2 - 0.5 e^t$
-        %     \item $y = 2 e^{-2 t} + e^t$
-        %     \item $y = 4 sin(t) + 3 e^{2 t}$
-        % \end{enumerate}
+        \begin{figure}
+          \centering
+          \includegraphics[width=0.6\textwidth]{flow/vertical_sensibility.png}
+          \caption{Estimativa de fator volume de formação para o fluido do problema proposto.}
+          \label{fig:linha_vertical}
+        \end{figure}
 
-        % Todos os problemas de valor inicial foram resolvidos com 10 passos de tempo. As figuras \ref{fig:teste1}, \ref{fig:teste2} e \ref{fig:teste3} mostram que o erro do método de Euler pode ser significativo. As figuras também mostram que o uso do método de Aitken teve um impacto positivo na qualidade das respostas.
+        Para o cálculo do problema proposto os elementos foram subdivididos de forma a terem \emph{subelementos} de 10 m de comprimento nos trechos verticais e de 100 m no trecho horizontal. O ponto de operação encontrado foi em $p_{wf} = 295.565 \,bar$ e $q = 1777.4 \, m^3 std/d$ (figura \ref{fig:operacao}). Como antecipado, o trecho em que o sistema pode ter gás livre é muito curto, de forma que a implementação proposta em que se considera apenas óleo é suficiente (figura \ref{fig:pressao}). Diversos resultados são mostrados nas figuras \ref{fig:resultados}.
 
-        % \begin{figure}[hbt!]
-        %     \begin{tikzpicture}
-        %         \begin{axis}[
-        %             grid=both,
-        %             xlabel = {$t$},
-        %             ylabel = {$y(t)$},
-        %             legend style={at={(0.55,0.85)}, anchor=east},
-        %             ]
-        %             \addplot[color=black, solid, smooth, thick] table [x=t, y=y_exact] {test1.txt};
-        %             \addplot[color=black, solid, smooth, mark=o] table [x=t, y=y_aprox] {test1.txt};
-        %             \addplot[color=black, solid, smooth, mark=*] table [x=t, y=y_aprox] {test1_aitken.txt};
-        %             \legend{$Exato$, $Euler$, $Euler+Aitken$};
-        %         \end{axis}
-        %     \end{tikzpicture}
-        %     \caption{Aproximação com o método de Euler do PVI número \ref{item:pvi1}.}
-        %     \label{fig:teste1}
-        % \end{figure}
+        \begin{figure}
+          \centering
+          \includegraphics[width=0.6\textwidth]{flow/system1_qp.png}
+          \caption{Ponto de operação do problema proposto.}
+          \label{fig:operacao}
+        \end{figure}
 
-        % \begin{figure}[hbt!]
-        %     \begin{tikzpicture}
-        %         \begin{axis}[
-        %             grid=both,
-        %             xlabel = {$t$},
-        %             ylabel = {$y(t)$},
-        %             legend style={at={(0.55,0.85)}, anchor=east},
-        %             ]
-        %             \addplot[color=black, solid, smooth, thick] table [x=t, y=y_exact] {test2.txt};
-        %             \addplot[color=black, solid, smooth, mark=o] table [x=t, y=y_aprox] {test2.txt};
-        %             \addplot[color=black, solid, smooth, mark=*] table [x=t, y=y_aprox] {test2_aitken.txt};
-        %             \legend{$Exato$, $Euler$, $Euler+Aitken$};
-        %         \end{axis}
-        %     \end{tikzpicture}
-        %     \caption{Aproximação com o método de Euler do PVI número \ref{item:pvi2}.}
-        %     \label{fig:teste2}
-        % \end{figure}
+        \begin{figure}
+          \centering
+          \includegraphics[width=0.6\textwidth]{flow/system1_operation.png}
+          \caption{Pressão ao longo dos elementos do problema proposto.}
+          \label{fig:pressao}
+        \end{figure}
 
-        % \begin{figure}[hbt!]
-        %     \begin{tikzpicture}
-        %         \begin{axis}[
-        %             grid=both,
-        %             xlabel = {$t$},
-        %             ylabel = {$y(t)$},
-        %             legend style={at={(0.55,0.85)}, anchor=east},
-        %             ]
-        %             \addplot[color=black, solid, smooth, thick] table [x=t, y=y_exact] {test3.txt};
-        %             \addplot[color=black, solid, smooth, mark=o] table [x=t, y=y_aprox] {test3.txt};
-        %             \addplot[color=black, solid, smooth, mark=*] table [x=t, y=y_aprox] {test3_aitken.txt};
-        %             \legend{$Exato$, $Euler$, $Euler+Aitken$};
-        %         \end{axis}
-        %     \end{tikzpicture}
-        %     \caption{Aproximação com o método de Euler do PVI número \ref{item:pvi3}.}
-        %     \label{fig:teste3}
-        % \end{figure}
 
-        % A figura \ref{fig:teste1erros} mostra a diferença entre o erro real das aproximações feitas com o método de Euler e o limitante do erro. Observa-se que o limitante do erro é \emph{significativamente} maior que o erro real. O limitante se mostrou uma pobre estimativa do erro.
+        \begin{figure}
+          \centering
 
-        % \begin{figure}[hbt!]
-        %     \begin{tikzpicture}
-        %         \begin{axis}[
-        %             grid=both,
-        %             xlabel = {$t$},
-        %             ylabel = {$|y(t) - w|$},
-        %             legend style={at={(0.70,0.80)}, anchor=east},
-        %             ]
-        %             \addplot[color=black, solid, smooth] table [x=t, y=exact_error] {test1.txt};
-        %             \addplot[color=black, solid, smooth, mark=o] table [x=t, y=error_limit] {test1.txt};
-        %             \addplot[color=black, solid, smooth, thick] table [x=t, y=exact_error] {test1_aitken.txt};
-        %             \addplot[color=black, solid, smooth, thick, mark=o] table [x=t, y=error_limit] {test1_aitken.txt};
-        %             \legend{$|y-w_{Euler}|$, $Limitante_{Euler}$, $|y-w_{Euler+Aitken}|$, $Limitante_{Euler+Aitken}$};
-        %         \end{axis}
-        %     \end{tikzpicture}
-        %     \caption{Estimativa do erro de aproximação com o método de Euler para o PVI número \ref{item:pvi1}.}
-        %     \label{fig:teste1erros}
-        % \end{figure}
+          \begin{subfigure}{0.45\textwidth}
+            \includegraphics[width=\textwidth]{flow/system1_v.png}
+            \caption{Velocidade}
+          \end{subfigure}
+          \hfill
+          \begin{subfigure}{0.45\textwidth}
+            \includegraphics[width=\textwidth]{flow/system1_q.png}
+            \caption{Vazão}
+          \end{subfigure}
 
-        % Em função dos resultados dos testes iniciais o problema proposto foi resolvido utilizando tanto o método de Euler como o método de Euler em conjunto com o método de Aitken. Foram utilizados os seguintes parâmetros de reservatório, junto com as correlações listadas final da seção \ref{sec:implementacao}:
+          \begin{subfigure}{0.45\textwidth}
+            \includegraphics[width=\textwidth]{flow/system1_Re.png}
+            \caption{Número de Reynolds}
+          \end{subfigure}
+          \hfill
+          \begin{subfigure}{0.45\textwidth}
+            \includegraphics[width=\textwidth]{flow/system1_f.png}
+            \caption{Fator de fricção}
+          \end{subfigure}
 
-        % \begin{itemize}
-        %     \item Fluidos
-        %     \begin{itemize}
-        %         \item $API = 25^oapi$
-        %         \item $d_g = 0.6$
-        %         \item $RGO = 60 \, m^3/m^3$
-        %         \item $T_{res} = 60^oC$
-        %         \item $Bw = 1$
-        %     \end{itemize}
-        %     \item Parâmetros de reservatório
-        %     \begin{itemize}
-        %         \item $N = 0.8 \, 10^6 \, m^3$
-        %         \item $W_{i,res} = 0.2 \, 10^6 \, m^3$
-        %         \item $p_{i,res} = 230 \, bar$
-        %         \item $\phi = 20\%$ (para cálculo da compressibilidade de rocha)
-        %     \end{itemize}
-        %     \item Parâmetros do aquífero
-        %     \begin{itemize}
-        %         \item $J = 20 \, m^3/d/bar$
-        %         \item $\phi = 3\%$ (para cálculo da compressibilidade de rocha)
-        %         \item $W_{i,aq} = 1.0 \, 10^6 \, m^3$
-        %         \item $p_{i,aq} = 250 \, bar$
-        %     \end{itemize}
-        % \end{itemize}
+          \begin{subfigure}{0.45\textwidth}
+            \includegraphics[width=\textwidth]{flow/system1_hl.png}
+            \caption{Perda de carga por comprimento linear}
+          \end{subfigure}
+          \hfill
+          \begin{subfigure}{0.45\textwidth}
+            \includegraphics[width=\textwidth]{flow/system1_bo.png}
+            \caption{Fator volume de formação}
+          \end{subfigure}
 
-        % Foi avaliado o comportamento do aquífero até 200 dias, em 10 passos de tempo. As figuras \ref{fig:testeaquifero} e \ref{fig:testeaquiferoerro} mostram que o melhor resultado foi com o método de Fetkovich. O método de Euler teve um resultado ruim. O procedimento do Método de Euler associado ao método de Aitken teve resultados comparáveis ao método de Fetkovich até \emph{metade} do período avaliado, quando começou a divergir do resultado exato e depois estimou valores de vazão negativos.
+          \caption{Principais resultados ao longo dos elementos do problema proposto.}
+          \label{fig:resultados}
+        \end{figure}
 
-        % \begin{figure}[hbt!]
-        %     \begin{tikzpicture}
-        %         \begin{semilogyaxis}[
-        %             grid=both,
-        %             xlabel = {$t$},
-        %             ylabel = {$Qw (m3/d)$},
-        %             legend style={at={(0.55,0.25)}, anchor=east},
-        %             ]
-        %             \addplot[color=black, solid, smooth, thick] table [x=Time, y=ExactQw] {aq2.txt};
-        %             \addplot[color=black, solid, smooth, mark=diamond] table [x=Time, y=Wat.Flow] {aq2.txt};
-        %             \addplot[color=black, solid, smooth, mark=o] table [x=t, y=y_aprox] {aq3.txt};
-        %             \addplot[color=black, solid, smooth, mark=*] table [x=t, y=y_aprox] {aq3_aitken.txt};
-        %             \legend{$Exato$, $Fetkovich$, $Euler$, $Euler+Aitken$};
-        %         \end{semilogyaxis}
-        %     \end{tikzpicture}
-        %     \caption{Aproximação com o método de Fetkovich e com o método de Euler de um aquífero conectado a um reservatório de óleo.}
-        %     \label{fig:testeaquifero}
-        % \end{figure}
+        Foram feitas algumas sensibilidades do ponto de operação com variáveis do problema: pressão de chegada e diâmetro da tubulação (figuras \ref{fig:sensibilidade}). A pressão de chegada apresentou uma correlação linear com a vazão do ponto de operação do sistema. A sensibilidade do diâmetro indica que a área aberta ao fluxo tem relação linear com a vazão.
 
-        % \begin{figure}[hbt!]
-        %     \begin{tikzpicture}
-        %         \begin{axis}[
-        %             grid=both,
-        %             xlabel = {$t$},
-        %             ylabel = {$|Qw - w| (m3/d)$},
-        %             legend style={at={(0.95,0.75)}, anchor=east},
-        %             ]
-        %             \addplot[color=black, solid, smooth, mark=diamond] table [x=Time, y=Error] {aq2.txt};
-        %             \addplot[color=black, solid, smooth, mark=o] table [x=t, y=exact_error] {aq3.txt};
-        %             \addplot[color=black, solid, smooth, mark=*] table [x=t, y=exact_error] {aq3_aitken.txt};
-        %             \legend{$Fetkovich$, $Euler$, $Euler+Aitken$};
-        %         \end{axis}
-        %     \end{tikzpicture}
-        %     \caption{Erro das aproximações com o método de Fetkovich e com o método de Euler de um aquífero conectado a um reservatório de óleo.}
-        %     \label{fig:testeaquiferoerro}
-        % \end{figure}
+        \begin{figure}
+          \centering
 
-    \section{Conclusão}
+          \begin{subfigure}{0.45\textwidth}
+            \includegraphics[width=\textwidth]{flow/system1_p_out.png}
+            \caption{Pressão de chegada}
+          \end{subfigure}
+          \hfill
+          \begin{subfigure}{0.45\textwidth}
+            \includegraphics[width=\textwidth]{flow/system1_d.png}
+            \caption{Diâmetro da tubulação}
+          \end{subfigure}
 
-        Os resultados indicaram que o método de Euler fornece resultados pobres e com pouco controle da qualidade das respostas. Os limitantes dos erros se mostraram muito grandes e de pouca utilidade. Os erros do método de Euler se mostraram significativos para o número de passos utilizado. O método de Aitken se mostrou efetivo na melhora das respostas estimadas com o método de Euler.
+          \caption{Sensibilidade do problema proposto.}
+          \label{fig:sensibilidade}
+        \end{figure}
 
-        Para um mesmo número de passos de tempo, os resultados do método de Fetkovich se mostraram muito melhores que os resultados do método de Euler. O método de Fetkovivh tem a vantagem de utizar relações constitutivas entre as variáveis do problema para melhorar as suas estimativas.
+\section{Conclusão}
 
-    % \label{}
+        O problema proposto mostrou um comportamento aparentemente linear com os dados de entrada. Como trata-se da simulação do fluxo de um fluido monofásico, isotérmico e em regime laminar, este comportamento já era esperado. O sistema desenvolvido mostrou que para o problema proposto não há necessidade de fazer muitas subdivisões nos elementos lineares.
+
 
 %% The Appendices part is started with the command \appendix;
 %% appendix sections are then done as normal sections
@@ -699,20 +432,6 @@ country={Brasil}}
 
 % \end{thebibliography}
 
-% \newpage
-% \FloatBarrier
-% \section{Código em C}
-
-% O código de ambos métodos foi implementado em um único arquivo. O código é apresentado em duas partes neste documento para facilitar a leitura. O código pode ser encontrado em \href{https://github.com/TiagoCAAmorim/numerical-methods}{https://github.com/TiagoCAAmorim/numerical-methods}.
-
-% \subsection{Método da Bissecção}
-% \lstinputlisting[language=C, linerange={1-229}]{./02_newton_raphson.c}
-
-% \subsection{Método de Newton-Raphson}
-% \lstinputlisting[language=C, linerange={231-445}]{./02_newton_raphson.c}
-
-% \subsection{Método da Mínima Curvatura}
-% \lstinputlisting[language=C, linerange={448-958}]{./02_newton_raphson.c}
 
 \end{document}
 \endinput

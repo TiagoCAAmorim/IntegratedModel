@@ -13,7 +13,10 @@ M.~Vasquez, H.~Beggs, \href{https://doi.org/10.2118/6719-PA}{{Correlations for F
 \newblock \href {http://arxiv.org/abs/https://onepetro.org/JPT/article-pdf/32/06/968/2226793/spe-6719-pa.pdf} {\path{arXiv:https://onepetro.org/JPT/article-pdf/32/06/968/2226793/spe-6719-pa.pdf}}, \href {https://doi.org/10.2118/6719-PA} {\path{doi:10.2118/6719-PA}}.
 \newline\urlprefix\url{https://doi.org/10.2118/6719-PA}
 
-\bibitem{aula01}
-A.~C. Bannwart, Integrated reservoir and production modeling: Lecture 1 - introduction, Notas de aula da disciplina PP590: Tópicos em Geoengenharia de Reservatórios (09 2023).
+\bibitem{rosa2006engenharia}
+A.~J. Rosa, R.~de~Souza~Carvalho, J.~A.~D. Xavier, Engenharia de reservat{\'o}rios de petr{\'o}leo, Interci{\^e}ncia, 2006.
+
+\bibitem{burden2016analise}
+R.~L. Burden, J.~D. Faires, A.~M. Burden, An{\'a}lise num{\'e}rica, Cengage Learning, 2016.
 
 \end{thebibliography}
