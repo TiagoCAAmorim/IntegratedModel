@@ -30,8 +30,13 @@ def simple_2D_2f():
     model.set_ni(5)
     model.set_nj(5)
 
-    model.set_bo(1.01)
-    model.set_uo(130.)
+    # model.set_bo(1.01)
+    # model.set_uo(130.)
+    model.pvt.set_api(15.)
+    model.pvt.set_gor(2.)
+    model.pvt.set_dg(0.6)
+    model.pvt.set_t(0.6)
+
     model.set_bw(1.)
     model.set_uw(1.)
 
@@ -65,7 +70,7 @@ def simple_2D_2f():
     ax = plt.gca()
     ax.legend()
     plt.grid()
-    plt.xlabel('t')
+    plt.xlabel('t [d]')
     plt.ylabel('Sw')
     plt.title('Simulation')
     save_plot(plt,'sim_sw')
@@ -82,7 +87,7 @@ def simple_2D_2f():
     ax = plt.gca()
     ax.legend()
     plt.grid()
-    plt.xlabel('t')
+    plt.xlabel('t [d]')
     plt.ylabel('Pr [bar]')
     plt.title('Simulation')
     save_plot(plt,'sim_pr')
@@ -97,20 +102,55 @@ def simple_2D_2f():
     ax = plt.gca()
     ax.legend()
     plt.grid()
-    plt.xlabel('t')
+    plt.xlabel('t [d]')
     plt.ylabel('[m3/d]')
     plt.title('Simulation')
     save_plot(plt,'sim_well')
+
+    simple_plot(t, model.get_voil(), 't [d]', 'Voil [MMm3]', 'Simulation', 'sim_voil')
 
     if model.get_ni() > 1 and model.get_nj() > 1:
         _ = plt.figure()
         sw = model.get_sw_map(-1)
         plt.contourf(sw)
         plt.colorbar(label='Contour levels')
-        plt.title('Sw Map')
-        save_plot(plt,'sim_final_sw')
+        plt.title('Sw Map: end of simulation')
+        save_plot(plt,'sim_sw_final')
 
-    pass
+        _ = plt.figure()
+        sw = model.get_sw_map(int(len(t)/2))
+        plt.contourf(sw)
+        plt.colorbar(label='Contour levels')
+        plt.title('Sw Map: mid of simulation')
+        save_plot(plt,'sim_sw_mid')
+
+        _ = plt.figure()
+        sw = model.get_sw_map(1)
+        plt.contourf(sw)
+        plt.colorbar(label='Contour levels')
+        plt.title('Sw Map: start of simulation')
+        save_plot(plt,'sim_sw_start')
+
+        _ = plt.figure()
+        pr = model.get_pr_map(-1)
+        plt.contourf(pr)
+        plt.colorbar(label='Contour levels')
+        plt.title('Pr Map: end of simulation')
+        save_plot(plt,'sim_pr_final')
+
+        _ = plt.figure()
+        pr = model.get_pr_map(1)
+        plt.contourf(pr)
+        plt.colorbar(label='Contour levels')
+        plt.title('Pr Map: start of simulation')
+        save_plot(plt,'sim_pr_start')
+
+        _ = plt.figure()
+        pr = model.get_pr_map(int(len(t)/2))
+        plt.contourf(pr)
+        plt.colorbar(label='Contour levels')
+        plt.title('Pr Map: Mid of simulation')
+        save_plot(plt,'sim_pr_mid')
 
 
 if __name__ == "__main__":

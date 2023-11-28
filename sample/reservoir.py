@@ -1,7 +1,6 @@
-# import math
 import numpy as np
 import relative_permeability
-# import pvt
+import pvt
 from tqdm import tqdm
 
 unit_conv = 0.00852702 # units: bar, mD, cP, m, m3/d
@@ -20,7 +19,7 @@ class Simple2D_OW:
         self._k = None
         self._p_init = None
         self.kr = relative_permeability.Corey()
-        # self.pvt = pvt.PVT()
+        self.pvt = pvt.PVT()
         self._bo = None
         self._bw = None
         self._uo = None
@@ -82,6 +81,11 @@ class Simple2D_OW:
     def set_uw(self, value):
         self._uw = value
 
+    def reset_bo(self):
+        self._bo = None
+    def reset_uo(self):
+        self._uo = None
+
     def set_qwi(self, value):
         self._qwi = value
     def set_rw(self, value):
@@ -121,12 +125,18 @@ class Simple2D_OW:
     def get_p_init(self):
         return self._p_init
 
-    def get_bo(self):
-        return self._bo
+    def get_bo(self, pressure=None):
+        if self._bo is not None:
+            return self._bo
+        self.pvt.set_p(pressure)
+        self.pvt.calculate_bo_Standing()
+        return self.pvt.get_bo()
     def get_bw(self):
         return self._bw
     def get_uo(self):
-        return self._uo
+        if self._uo is not None:
+            return self._uo
+        return self.pvt.get_uo()
     def get_uw(self):
         return self._uw
 
@@ -158,6 +168,19 @@ class Simple2D_OW:
         self._pr_mat = np.full((self.get_ni(), self.get_nj()), self.get_p_init())
         self._sw_mat = np.full((self.get_ni(), self.get_nj()), self.kr.sat.get_swi())
 
+        if self._bo is None:
+            self.pvt.set_p(self.get_p_init())
+            self.pvt.calculate_rs_Standing()
+            self.pvt.calculate_p_bubble_Standing()
+            self.pvt.calculate_co_bubble_Standing()
+            self.pvt.calculate_bo_bubble_Standing()
+            self.pvt.calculate_bo_Standing()
+
+        if self._uo is None:
+            self.pvt.set_p(self.get_p_init())
+            self.pvt.calculate_rs_Standing()
+            self.pvt.calculate_uo_do_Standing()
+            self.pvt.calculate_uo_Standing()
 
         self._ncells = self.get_ni() * self.get_nj()
         self._nvars = 2 * self._ncells
@@ -176,6 +199,14 @@ class Simple2D_OW:
 
     def get_cell_number(self, i, j):
         return i+1 + j * self.get_ni()
+
+    def get_cell_pr(self, x, i, j):
+        p = self.get_cell_number(i, j)
+        return x[2*p-2]
+
+    def get_cell_sw(self, x, i, j):
+        p = self.get_cell_number(i, j)
+        return x[2*p-1]
 
     def get_kro(self, x, i1, j1, i2, j2):
         c1 = self.get_cell_number(i1,j1)
@@ -217,7 +248,7 @@ class Simple2D_OW:
             tr = k * self._di_mat[i1,j1] * self.get_hk() / self._dj_mat[i1,j1]
         else:
             tr = k * self._dj_mat[i1,j1] * self.get_hk() / self._di_mat[i1,j1]
-        tro = unit_conv * tr * self.get_kro(x, i1, j1, i2, j2) / (self.get_bo() * self.get_uo())
+        tro = unit_conv * tr * self.get_kro(x, i1, j1, i2, j2) / (self.get_bo(self.get_cell_pr(x, i1, j1)) * self.get_uo())
         trw = unit_conv * tr * self.get_krw(x, i1, j1, i2, j2) / (self.get_bw() * self.get_uw())
         return tro, trw
 
@@ -243,9 +274,9 @@ class Simple2D_OW:
                     k[2*p-2,2*p2-2] = tro
                     k[2*p-1,2*p2-2] = trw
                 vp_dt = self._di_mat[i,j] * self._dj_mat[i,j] * self.get_hk() * self._phi_mat[i,j] / dt
-                k[2*p-2,2*p-1] = vp_dt / self.get_bo()
+                k[2*p-2,2*p-1] = vp_dt / self.get_bo(self.get_cell_pr(x, i, j))
                 k[2*p-1,2*p-1] = -1. * vp_dt / self.get_bw()
-        k[-2,-2] -= self._wi * self.get_kro(x, self.get_ni()-1, self.get_nj()-1, self.get_ni()-1, self.get_nj()-1) / (self.get_bo() * self.get_uo())
+        k[-2,-2] -= self._wi * self.get_kro(x, self.get_ni()-1, self.get_nj()-1, self.get_ni()-1, self.get_nj()-1) / (self.get_bo(self.get_cell_pr(x, self.get_ni()-1, self.get_nj()-1)) * self.get_uo())
         k[-1,-2] -= self._wi * self.get_krw(x, self.get_ni()-1, self.get_nj()-1, self.get_ni()-1, self.get_nj()-1) / (self.get_bw() * self.get_uw())
         return k
 
@@ -256,10 +287,12 @@ class Simple2D_OW:
                 p = self.get_cell_number(i,j)
                 vp_dt = self._di_mat[i,j] * self._dj_mat[i,j] * self.get_hk() * self._phi_mat[i,j] / dt
                 sw_previous = self._x_list[-1][2*p-1]
-                f[2*p-2,0] = vp_dt / self.get_bo() * sw_previous
+                pr_previous = self._x_list[-1][2*p-2]
+                f[2*p-2,0] = vp_dt / self.get_bo(pr_previous) * sw_previous
                 f[2*p-1,0] = -1. * vp_dt / self.get_bw() * sw_previous
         f[1,0] -= self.get_qwi()
-        f[-2,0] -= self._wi * self.get_kro(self._x_list[-1], self.get_ni()-1, self.get_nj()-1, self.get_ni()-1, self.get_nj()-1) / (self.get_bo() * self.get_uo()) * self.get_pwf()
+        pr_previous = self._x_list[-1][-2]
+        f[-2,0] -= self._wi * self.get_kro(self._x_list[-1], self.get_ni()-1, self.get_nj()-1, self.get_ni()-1, self.get_nj()-1) / (self.get_bo(pr_previous) * self.get_uo()) * self.get_pwf()
         f[-1,0] -= self._wi * self.get_krw(self._x_list[-1], self.get_ni()-1, self.get_nj()-1, self.get_ni()-1, self.get_nj()-1) / (self.get_bw() * self.get_uw()) * self.get_pwf()
         return f
 
@@ -322,7 +355,7 @@ class Simple2D_OW:
     def get_well_qo(self):
         sw = self.get_sw_cell(self.get_ni()-1, self.get_nj()-1)
         pr = self.get_pr_cell(self.get_ni()-1, self.get_nj()-1)
-        qo = [self._wi * self.kr.get_krow_2f(s) / (self.get_bo() * self.get_uo()) * (p - self.get_pwf()) for p,s in zip(pr, sw)]
+        qo = [self._wi * self.kr.get_krow_2f(s) / (self.get_bo(p) * self.get_uo()) * (p - self.get_pwf()) for p,s in zip(pr, sw)]
         return qo
 
     def get_well_qw(self):
@@ -331,6 +364,14 @@ class Simple2D_OW:
         qw = [self._wi * self.kr.get_krw_2f(s) / (self.get_bw() * self.get_uw()) * (p - self.get_pwf()) for p,s in zip(pr, sw)]
         return qw
 
+    def get_well_wcut(self):
+        sw = self.get_sw_cell(self.get_ni()-1, self.get_nj()-1)
+        pr = self.get_pr_cell(self.get_ni()-1, self.get_nj()-1)
+        qo = [self._wi * self.kr.get_krow_2f(s) / (self.get_bo(p) * self.get_uo()) * (p - self.get_pwf()) for p,s in zip(pr, sw)]
+        qw = [self._wi * self.kr.get_krw_2f(s) / (self.get_bw() * self.get_uw()) * (p - self.get_pwf()) for p,s in zip(pr, sw)]
+        wcut = [qw/(qo+qw+1e-15) for qo, qw in zip(qo,qw)]
+        return wcut
+
     def get_pr_map(self, t_index):
         x = self._x_list[t_index]
         return x[::2].flatten().reshape((self.get_ni(),self.get_nj()))
@@ -338,3 +379,8 @@ class Simple2D_OW:
     def get_sw_map(self, t_index):
         x = self._x_list[t_index]
         return x[1::2].flatten().reshape((self.get_ni(),self.get_nj()))
+
+    def get_voil(self):
+        vp = self._di_mat * self._dj_mat * self.get_hk() * self._phi_mat
+        voil = [np.sum(vp * (1 - self.get_sw_map(i)))/1e6 for i in range(len(self._t_list))]
+        return voil
