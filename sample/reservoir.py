@@ -150,6 +150,10 @@ class Simple2D_OW:
     def get_t_end(self):
         return self._t_end
 
+    def reset_sim(self):
+        self._t_list = []
+        self._x_list = []
+
     def initialize(self):
         self._di_mat = np.full((self.get_ni(), self.get_nj()), self.get_hi() / self.get_ni())
         self._dj_mat = np.full((self.get_ni(), self.get_nj()), self.get_hj() / self.get_nj())
@@ -157,7 +161,6 @@ class Simple2D_OW:
         self._k_mat = np.full((self.get_ni(), self.get_nj()), self.get_k())
         self._pr_mat = np.full((self.get_ni(), self.get_nj()), self.get_p_init())
         self._sw_mat = np.full((self.get_ni(), self.get_nj()), self.kr.sat.get_swi())
-
 
         self._ncells = self.get_ni() * self.get_nj()
         self._nvars = 2 * self._ncells
@@ -167,7 +170,7 @@ class Simple2D_OW:
         ro = self._di_mat[-1,-1] * np.exp(-(a*np.pi - np.log(a))/(1. + a*a))
         self._wi = unit_conv * 2. * np.pi * self._k_mat[-1, -1] * self.get_hk() / (np.log(ro/self.get_rw()) + self.get_skin())
 
-        self._t_list.append(0.)
+        self._t_list = [0.]
         x = np.zeros(self._nvars)
         x[::2] = self._pr_mat.flatten()
         x[1::2] = self._sw_mat.flatten()
@@ -279,28 +282,37 @@ class Simple2D_OW:
             f = self.build_f(dt)
             x =  np.linalg.solve(k,f)
 
-            if len(self._t_list) == 1:
-                np.savetxt('x_prev_mat.csv', self._x_list[-1], delimiter=',')
-                np.savetxt('k_mat.csv', k, delimiter=',')
-                np.savetxt('f_mat.csv', f, delimiter=',')
-                np.savetxt('x_mat.csv', x, delimiter=',')
+            # if len(self._t_list) == 1:
+            #     np.savetxt('x_prev_mat.csv', self._x_list[-1], delimiter=',')
+            #     np.savetxt('k_mat.csv', k, delimiter=',')
+            #     np.savetxt('f_mat.csv', f, delimiter=',')
+            #     np.savetxt('x_mat.csv', x, delimiter=',')
 
             if np.linalg.norm(x-x_last) < 0.01:
-                return x
+                self._x_current = x
+                return
             n += 1
         print("Didn't converge!")
-        return x
+        self._x_current = x
+        return
 
-    def run_simulation(self, dt):
-        self.initialize()
-        self.start_simulation()
+    def run_simulation(self, dt, add_current_solution=False):
+        if (len(self._t_list) == 0):
+            self.initialize()
+            self.start_simulation()
         # total_iterations = 100
-        progress_bar = tqdm(total=100, desc="Progress", bar_format="{bar}")
-        t = dt
+        if not add_current_solution:
+            progress_bar = tqdm(total=100, desc="Progress", bar_format="{bar}")
+        t = self._t_list[-1]
         while t < self._t_end:
-            self._x_list.append(self.solve_next_dt(dt))
+            dti = min(dt, self._t_end - self._t_list[-1])
+            if not add_current_solution:
+                self.solve_next_dt(dti)
+            self._x_list.append(self._x_current)
+            t = min(self._t_list[-1] + dti, self._t_end)
             self._t_list.append(t)
-            t += dt
+            if add_current_solution:
+                return
             percentage_completion = min(0.999, t / self._t_end) * 100
             progress_bar.update(percentage_completion - progress_bar.n)
         progress_bar.close()
