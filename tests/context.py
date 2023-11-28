@@ -5,4 +5,5 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..\s
 import pvt
 import flow
 import ipr
-
+import relative_permeability
+import reservoir

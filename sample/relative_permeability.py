@@ -128,4 +128,4 @@ class Corey:
             return 0.
         if sw >= (1 - self.sat.get_sorw()):
             return 0.
-        return self.get_kro_max() * self.get_now() * math.pow(self.sat.get_sodw(sw), self.get_now() - 1.) / (1 - self.sat.get_sorw() - self.sat.get_swi())
+        return -1. * self.get_kro_max() * self.get_now() * math.pow(self.sat.get_sodw(sw), self.get_now() - 1.) / (1 - self.sat.get_sorw() - self.sat.get_swi())
