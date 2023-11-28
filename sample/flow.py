@@ -6,7 +6,7 @@ import reservoir
 
 class SubFlowElement:
 
-    def __init__(self, element=None):
+    def __init__(self, element=None, debug=False):
         self._eps = 1E-12
         self._max_iter = 100
         self._g = 9.81 # m/s^2
@@ -39,6 +39,8 @@ class SubFlowElement:
         self._hl = None
 
         self.pvt = pvt.PVT()
+
+        self._debug = debug
 
         if element is not None:
             self._copy_all_properties(element)
@@ -132,6 +134,10 @@ class SubFlowElement:
         element.pvt = self.pvt.copy()
 
         return element
+
+    def _log(self, message):
+        if self._debug:
+            print(message)
 
     def get_variables_list(self):
         return self.variables.get_list()
@@ -306,7 +312,9 @@ class SubFlowElement:
         hl = self._hl
         htm = 0.  # not implemented yet
         dv2 = self.calculate_delta_v2_g()
-        return -1E-5 * self.pvt.get_rho() * self._g * (dz + hl + htm + dv2)
+        deltap = -1E-5 * self.pvt.get_rho() * self._g * (dz + hl + htm + dv2)
+        self._log(f'  dz = {dz:0.2f}, hl = {hl:0.2f}, dv2 = {dv2:0.2f}, deltap = {deltap:0.2f}, rho = {self.pvt.get_rho():0.2f}, u = {self.pvt.get_u():0.2f}')
+        return deltap
 
     def calculate_p_in(self):
         self.set_p_in(self._p_out - self.calculate_delta_p())
@@ -490,7 +498,7 @@ class FlowElement(SubFlowElement):
         return [sum(h[:i + 1]) for i in range(len(h))]
 
     def _build_element_list(self):
-        self._elements = [SubFlowElement(self) for _ in range(self._n)]
+        self._elements = [SubFlowElement(self, self._debug) for _ in range(self._n)]
         for i, element in enumerate(self._elements):
             element._h = self._h / self._n
             element._z_in = self._z_in + i * (self._z_out - self._z_in)/ self._n

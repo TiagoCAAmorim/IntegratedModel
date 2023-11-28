@@ -8,7 +8,7 @@ class PVT:
 
         self._api = None
         self._do = None
-        self._dw = 1.
+        self._dw = 1.0
         self._dg = None
         self._rho_air = 1.2 # kg/m3
         self._rhow = 1000. # kg/m3
@@ -316,7 +316,7 @@ class PVT:
         if self._wfr > 0. and self._dw is None:
             return None
         if self._wfr == 1.:
-            return self._rhow
+            return self._dw * self._rhow
         rhoo = self.get_rhoo_in_place(auto)
         if self._wfr < 1. and rhoo is None:
             return None
