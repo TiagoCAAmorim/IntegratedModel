@@ -285,7 +285,7 @@ class PVT:
             if self._rs is None:
                 self.calculate_rs_Standing()
             if self._bo is None:
-                self.calculate_bo_Standing()
+                self.calculate_bo_Standing(auto)
         else:
             if self._rs is None or self._bo is None:
                 return None
@@ -301,7 +301,7 @@ class PVT:
             return None
         if auto:
             if self._bg is None:
-                self.calculate_bg(True)
+                self.calculate_bg(auto)
         else:
             if self._bg is None:
                 return None
@@ -365,6 +365,8 @@ class PVT:
         return self._y_n2
     def get_z(self):
         return self._z
+    def get_gas_mw(self):
+        return 29. * self.get_dg()
     def get_uo_do(self):
         return self._uo_do
     def get_uo(self):
@@ -682,7 +684,7 @@ class PVT:
         self._check(['p','t'])
         if auto:
             if self._z is None:
-                self.calculate_z_Standing()
+                self.calculate_z_Standing(auto)
         else:
             self._check(['z'])
         self._bg = self._z * self._p_std / self._p * (self._t + 273.15) / (self._t_std + 273.15)
