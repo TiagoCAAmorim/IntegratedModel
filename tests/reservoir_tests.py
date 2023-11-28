@@ -25,10 +25,10 @@ def simple_2D_2f():
     model.set_phi(0.3)
 
     model.set_hi(600.)
-    model.set_hj(200.)
+    model.set_hj(600.)
     model.set_hk(30.)
     model.set_ni(5)
-    model.set_nj(1)
+    model.set_nj(5)
 
     model.set_bo(1.01)
     model.set_uo(130.)
@@ -50,12 +50,12 @@ def simple_2D_2f():
     model.set_t_end(300. * 5.)
 
     # model.initialize()
-    model.run_simulation(0.5)
+    model.run_simulation(2.0)
 
     t = model.get_t()
     s1 = model.get_sw_cell(0,0)
-    s2 = model.get_sw_cell(int(model.get_ni()/2),0)
-    s3 = model.get_sw_cell(model.get_ni()-1,0)
+    s2 = model.get_sw_cell(int(model.get_ni()/2),int(model.get_nj()/2))
+    s3 = model.get_sw_cell(model.get_ni()-1,model.get_nj()-1)
 
     _ = plt.figure()
     plt.plot(t, s1, label="Sw1")
@@ -71,8 +71,8 @@ def simple_2D_2f():
     save_plot(plt,'sim_sw')
 
     p1 = model.get_pr_cell(0,0)
-    p2 = model.get_pr_cell(int(model.get_ni()/2),0)
-    p3 = model.get_pr_cell(model.get_ni()-1,0)
+    p2 = model.get_pr_cell(int(model.get_ni()/2),int(model.get_nj()/2))
+    p3 = model.get_pr_cell(model.get_ni()-1,model.get_nj()-1)
 
     _ = plt.figure()
     plt.plot(t, p1, label="Pr1")
@@ -101,6 +101,14 @@ def simple_2D_2f():
     plt.ylabel('[m3/d]')
     plt.title('Simulation')
     save_plot(plt,'sim_well')
+
+    if model.get_ni() > 1 and model.get_nj() > 1:
+        _ = plt.figure()
+        sw = model.get_sw_map(-1)
+        plt.contourf(sw)
+        plt.colorbar(label='Contour levels')
+        plt.title('Sw Map')
+        save_plot(plt,'sim_final_sw')
 
     pass
 

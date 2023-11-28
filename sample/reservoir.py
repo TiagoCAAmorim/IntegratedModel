@@ -330,3 +330,11 @@ class Simple2D_OW:
         pr = self.get_pr_cell(self.get_ni()-1, self.get_nj()-1)
         qw = [self._wi * self.kr.get_krw_2f(s) / (self.get_bw() * self.get_uw()) * (p - self.get_pwf()) for p,s in zip(pr, sw)]
         return qw
+
+    def get_pr_map(self, t_index):
+        x = self._x_list[t_index]
+        return x[::2].flatten().reshape((self.get_ni(),self.get_nj()))
+
+    def get_sw_map(self, t_index):
+        x = self._x_list[t_index]
+        return x[1::2].flatten().reshape((self.get_ni(),self.get_nj()))
