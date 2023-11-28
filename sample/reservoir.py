@@ -273,6 +273,9 @@ class Simple2D_OW:
         return r
 
     def solve_next_dt(self, dt):
+        if len(self._x_list) == 0:
+            self.initialize()
+            self.start_simulation()
         x = self._x_list[-1].copy()
         n = 0
         # r = self.build_r(x, dt)
@@ -296,13 +299,21 @@ class Simple2D_OW:
         self._x_current = x
         return
 
+    def try_pwf(self, pwf, dt):
+        self.set_pwf(pwf)
+        self.solve_next_dt(dt)
+        pr = float(self._x_current[-2])
+        sw = float(self._x_current[-1])
+        qo = self._wi * self.kr.get_krow_2f(sw) / (self.get_bo() * self.get_uo()) * (pr - self.get_pwf())
+        qw = self._wi * self.kr.get_krw_2f(sw)  / (self.get_bw() * self.get_uw()) * (pr - self.get_pwf())
+        return qo, qw
+
     def run_simulation(self, dt, add_current_solution=False):
         if (len(self._t_list) == 0):
             self.initialize()
             self.start_simulation()
-        # total_iterations = 100
         if not add_current_solution:
-            progress_bar = tqdm(total=100, desc="Progress", bar_format="{bar}")
+            progress_bar = tqdm(total=100, desc="Progress", bar_format="{percentage:3.0f}% {elapsed} {bar}")
         t = self._t_list[-1]
         while t < self._t_end:
             dti = min(dt, self._t_end - self._t_list[-1])
@@ -335,12 +346,14 @@ class Simple2D_OW:
         sw = self.get_sw_cell(self.get_ni()-1, self.get_nj()-1)
         pr = self.get_pr_cell(self.get_ni()-1, self.get_nj()-1)
         qo = [self._wi * self.kr.get_krow_2f(s) / (self.get_bo() * self.get_uo()) * (p - self.get_pwf()) for p,s in zip(pr, sw)]
+        qo = [float(q) for q in qo]
         return qo
 
     def get_well_qw(self):
         sw = self.get_sw_cell(self.get_ni()-1, self.get_nj()-1)
         pr = self.get_pr_cell(self.get_ni()-1, self.get_nj()-1)
         qw = [self._wi * self.kr.get_krw_2f(s) / (self.get_bw() * self.get_uw()) * (p - self.get_pwf()) for p,s in zip(pr, sw)]
+        qw = [float(q) for q in qw]
         return qw
 
     def get_pr_map(self, t_index):

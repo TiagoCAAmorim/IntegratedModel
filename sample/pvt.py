@@ -586,7 +586,7 @@ class PVT:
                 if self._bo_bubble is None:
                     self.calculate_bo_bubble_Standing()
                 if self._co_bubble is None:
-                    self.calculate_co_bubble_Standing()
+                    self.calculate_co_bubble_Standing(auto)
             else:
                 self._check(['co_bubble','bo_bubble'])
             bo = self._bo_bubble * math.exp(self._co_bubble * (self._p_bubble - self._p))

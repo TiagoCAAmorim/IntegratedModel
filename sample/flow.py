@@ -2,6 +2,7 @@ import math
 import pvt
 import ipr
 import common
+import reservoir
 
 class SubFlowElement:
 
@@ -548,6 +549,8 @@ class CompositeFlowElement:
         self._n = 1
         self.pvt = pvt.PVT()
         self.ipr = ipr.IPR()
+        self._reservoir = None
+        self._dt = None
 
         self._p_in = None
         self._p_out = None
@@ -621,9 +624,14 @@ class CompositeFlowElement:
     def set_max_iter(self,i):
         self._max_iter = i
 
+    def set_dt(self,value):
+        self._dt = value
+    def set_reservoir(self, reservoir_obj):
+        self._reservoir = reservoir_obj
+
     def update_pvt(self):
         for element in self._elements:
-            element[-1].pvt = self.pvt.copy()
+            element.pvt = self.pvt.copy()
 
     def add_element(self):
         self._elements.append(FlowElement(self._debug))
@@ -757,18 +765,33 @@ class CompositeFlowElement:
         self.set_t_in(self._elements[0].get_t_in()[0])
         self.set_q_in(self._elements[0].get_q_in()[0])
 
+    def solve_reservoir(self, pwf):
+        return self._reservoir.try_pwf(pwf, self._dt)
+
     def _pwf_error(self, pwf):
-        q_std = self.ipr.get_q(pwf)
+        if self._reservoir is None:
+            q_std = self.ipr.get_q(pwf)
+        else:
+            qo_std, qw_std = self.solve_reservoir(pwf)
+            q_std = qo_std + qw_std
+            wfr = qw_std / q_std
+            self.pvt.set_wfr(wfr)
         self.set_q_std(q_std)
         self.solve_in_flow()
         return pwf - self.get_p_in()[0]
 
-    def solve_operation_point(self):
+    def solve_operation_point(self, pwf_test=None):
         self._log(f'Operation point search')
-        p0 = self.ipr._pr * 0.98
+        if pwf_test is None:
+            p0 = self.ipr._pr * 0.98
+        else:
+            p0 = pwf_test
         f0 = self._pwf_error(p0)
         self._log(f' i=0, p={p0}, f={f0}')
-        p1 = self.ipr._pr * 0.96
+        if pwf_test is None:
+            p1 = self.ipr._pr * 0.96
+        else:
+            p1 = pwf_test * 0.95
         f1 = self._pwf_error(p1)
         self._log(f' i=1, p={p1}, f={f1}')
         p_best = p0
