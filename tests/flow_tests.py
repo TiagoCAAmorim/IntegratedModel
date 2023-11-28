@@ -243,7 +243,6 @@ def vertical_two_elements_test():
 def define_system_ex1(debug_mode):
     line = flow.CompositeFlowElement(debug_mode=debug_mode)
     define_common_parameters(line)
-    line.pvt.set_wfr(1.)
     line.set_number_divisions(100)
 
     line.add_element()
