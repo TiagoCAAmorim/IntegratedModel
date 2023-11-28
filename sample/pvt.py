@@ -4,12 +4,15 @@ import common
 class PVT:
 
     def __init__(self):
+        self._wfr = 0.
+
         self._api = None
         self._do = None
-        self._dw = None
+        self._dw = 1.
         self._dg = None
         self._rho_air = 1.2 # kg/m3
         self._rhow = 1000. # kg/m3
+        self._rhomix = None
 
         self._t = None
         self._p = None
@@ -22,7 +25,8 @@ class PVT:
 
         self._bo = None
         self._bg = None
-        self._bw = None
+        self._bw = 1.
+        self._bmix = None
 
         self._bo_bubble = None
         self._co_bubble = None
@@ -38,8 +42,11 @@ class PVT:
 
         self._uo_do = None
         self._uo = None
+        self._uw = 1.
+        self._umix = None
 
         self.variables = common.VariablesList({
+            'wfr':['Water fraction', '-'],
             'api':['Oil API degree', 'oAPI'],
             'do':['Oil relative density', '-'],
             'dg':['Gas relative density', '-'],
@@ -47,6 +54,7 @@ class PVT:
             'rhoo':['Oil density', 'kg/m3'],
             'rhog':['Gas density', 'kg/m3'],
             'rhow':['Water density', 'kg/m3'],
+            'rhomix':['Mixture density', 'kg/m3'],
             't':['In place temperature', 'oC'],
             'p':['In place pressure', 'bar'],
             'gor':['Gas oil ratio', 'std m3/std m3'],
@@ -55,6 +63,7 @@ class PVT:
             'bo':['Oil formation volume factor', '-'],
             'bg':['Gas formation volume factor', '-'],
             'bw':['Water formation volume factor', '-'],
+            'bmix':['Mixture formation volume factor', '-'],
             'bo_bubble':['Oil formation volume factor at the bubble point pressure', '-'],
             'co_bubble':['Oil compressibility at the bubble point pressure', '1/bar'],
             't_pc':['Pseudo-critical temperature', 'oC'],
@@ -67,10 +76,14 @@ class PVT:
             'z':['Gas z factor', '-'],
             'uo_do':['Dead oil viscosity', 'cp'],
             'uo':['Oil viscosity', 'cp'],
+            'uw':['Water viscosity', 'cp'],
+            'umix':['Mixture viscosity', 'cp'],
             })
 
     def copy(self):
         pvt = PVT()
+
+        pvt._wfr = self._wfr
 
         pvt._api = self._api
         pvt._do = self._do
@@ -78,6 +91,7 @@ class PVT:
         pvt._dg = self._dg
         pvt._rho_air = self._rho_air
         pvt._rhow = self._rhow
+        pvt._rhomix = self._rhomix
 
         pvt._t = self._t
         pvt._p = self._p
@@ -91,6 +105,7 @@ class PVT:
         pvt._bo = self._bo
         pvt._bg = self._bg
         pvt._bw = self._bw
+        pvt._bmix = self._bmix
 
         pvt._bo_bubble = self._bo_bubble
         pvt._co_bubble = self._co_bubble
@@ -106,6 +121,8 @@ class PVT:
 
         pvt._uo_do = self._uo_do
         pvt._uo = self._uo
+        pvt._uw = self._uw
+        pvt._umix = self._umix
 
         return pvt
 
@@ -113,6 +130,9 @@ class PVT:
         if value < min_value or value > max_value:
             raise NameError(f'Invalid value ({value}). Valid values: [{min_value},{max_value}].')
 
+    def set_wfr(self, wfr):
+        self._check_value(wfr,0.,1.)
+        self._wfr = wfr
     def set_api(self, api):
         self._check_value(api,1.,100.)
         self._api = api
@@ -135,7 +155,7 @@ class PVT:
         self._dw = dw
     def set_rhow(self, rhow):
         self._check_value(rhow,10.,10000.)
-        self._dg = rhow / self._rhow
+        self._dw = rhow / self._rhow
     def set_gor(self, gor):
         self._check_value(gor,0.,100000.)
         self._gor = gor
@@ -292,6 +312,17 @@ class PVT:
         if self._dw is None:
             return None
         return self._dw * self._rhow
+    def get_rho(self, auto=False):
+        if self._wfr > 0. and self._dw is None:
+            return None
+        if self._wfr == 1.:
+            return self._rhow
+        rhoo = self.get_rhoo_in_place(auto)
+        if self._wfr < 1. and rhoo is None:
+            return None
+        if self._wfr == 0.:
+            return rhoo
+        return (1-self._wfr) * rhoo + self._wfr * self._dw * self._rhow
     def get_t(self):
         return self._t
     def get_p(self):
@@ -308,6 +339,12 @@ class PVT:
         return self._bg
     def get_bw(self):
         return self._bw
+    def get_b(self):
+        if self._wfr == 1.:
+            return self._bw
+        if self._wfr == 0.:
+            return self._bo
+        return (1-self._wfr) * self._bo + self._wfr * self._bw
     def get_bo_bubble(self):
         return self._bo_bubble
     def get_co_bubble(self):
@@ -332,6 +369,12 @@ class PVT:
         return self._uo_do
     def get_uo(self):
         return self._uo
+    def get_u(self):
+        if self._wfr == 1.:
+            return self._uw
+        if self._wfr == 0.:
+            return self._uo
+        return (1-self._wfr) * self._uo + self._wfr * self._uw
 
     def _raise_error_variable(self, variable):
         raise NameError(f'{self.variables.get_description(variable)} not set.')

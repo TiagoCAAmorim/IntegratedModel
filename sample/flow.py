@@ -209,10 +209,10 @@ class SubFlowElement:
         return self.pvt.get_rs()
     def get_gor(self):
         return self.pvt.get_gor()
-    def get_uo(self):
-        return self.pvt.get_uo()
-    def get_bo(self):
-        return self.pvt.get_bo()
+    def get_u(self):
+        return self.pvt.get_u()
+    def get_b(self):
+        return self.pvt.get_b()
 
     def calculate_p(self):
         self._p = (self._p_in + self._p_out) / 2.
@@ -234,10 +234,10 @@ class SubFlowElement:
 
     def calculate_q_in(self):
         self.calculate_rhoo(self._p_in, self._t_in)
-        self._q_in = self._m_rate / self.pvt.get_rhoo_in_place() * (24*60*60)
+        self._q_in = self._m_rate / self.pvt.get_rho() * (24*60*60)
     def calculate_q_out(self):
         self.calculate_rhoo(self._p_out, self._t_out)
-        self._q_out = self._m_rate / self.pvt.get_rhoo_in_place() * (24*60*60)
+        self._q_out = self._m_rate / self.pvt.get_rho() * (24*60*60)
 
     def set_q_std(self, q):
         self.calculate_m_rate_std(q)
@@ -248,24 +248,24 @@ class SubFlowElement:
 
     def get_q_std(self):
         self.calculate_rhoo(self.pvt._p_std, self.pvt._t_std)
-        return self._m_rate / self.pvt.get_rhoo_in_place() * (24*60*60)
+        return self._m_rate / self.pvt.get_rho() * (24*60*60)
 
     def calculate_m_rate_in(self):
         self.calculate_rhoo(self._p_in, self._t_in)
-        self._m_rate = self.pvt.get_rhoo_in_place() * self._q_in / (24*60*60)
+        self._m_rate = self.pvt.get_rho() * self._q_in / (24*60*60)
     def calculate_m_rate_out(self):
         self.calculate_rhoo(self._p_out, self._t_out)
-        self._m_rate = self.pvt.get_rhoo_in_place() * self._q_out / (24*60*60)
+        self._m_rate = self.pvt.get_rho() * self._q_out / (24*60*60)
     def calculate_m_rate_std(self, q_std):
         self.calculate_rhoo(self.pvt._p_std, self.pvt._t_std)
-        self._m_rate = self.pvt.get_rhoo_in_place() * q_std / (24*60*60)
+        self._m_rate = self.pvt.get_rho() * q_std / (24*60*60)
 
     def calculate_v_in(self):
         self.calculate_rhoo(self._p_in, self._t_in)
-        self._v_in = 4 * self._m_rate / (self.pvt.get_rhoo_in_place() * math.pi * self._d ** 2)
+        self._v_in = 4 * self._m_rate / (self.pvt.get_rho() * math.pi * self._d ** 2)
     def calculate_v_out(self):
         self.calculate_rhoo(self._p_out, self._t_out)
-        self._v_out = 4 * self._m_rate / (self.pvt.get_rhoo_in_place() * math.pi * self._d ** 2)
+        self._v_out = 4 * self._m_rate / (self.pvt.get_rho() * math.pi * self._d ** 2)
 
     def calculate_uo(self, p, t):
         self.pvt.set_t(t)
@@ -276,7 +276,7 @@ class SubFlowElement:
 
     def calculate_Reynolds(self):
         self.calculate_uo(self._p, self._t)
-        self._re = 4 * self._m_rate / (self.pvt.get_uo()/1000. * math.pi * self._d)
+        self._re = 4 * self._m_rate / (self.pvt.get_u()/1000. * math.pi * self._d)
 
     def calculate_f(self):
         if self._re < 2300:
@@ -303,9 +303,9 @@ class SubFlowElement:
         dz = self.calculate_delta_z()
         self.calculate_head_loss()
         hl = self._hl
-        htm = 0. # not implemented yet
+        htm = 0.  # not implemented yet
         dv2 = self.calculate_delta_v2_g()
-        return -1E-5 * self.pvt.get_rhoo_in_place() * self._g * (dz + hl + htm + dv2)
+        return -1E-5 * self.pvt.get_rho() * self._g * (dz + hl + htm + dv2)
 
     def calculate_p_in(self):
         self.set_p_in(self._p_out - self.calculate_delta_p())
@@ -479,10 +479,10 @@ class FlowElement(SubFlowElement):
         return self._get_results_elements('get_rs', 0)
     def get_gor(self):
         return self._get_results_elements('get_gor', 0)
-    def get_uo(self):
-        return self._get_results_elements('get_uo', 0)
-    def get_bo(self):
-        return self._get_results_elements('get_bo', 0)
+    def get_u(self):
+        return self._get_results_elements('get_u', 0)
+    def get_b(self):
+        return self._get_results_elements('get_b', 0)
 
     def get_h_cumulative(self):
         h = self.get_h()
@@ -695,10 +695,10 @@ class CompositeFlowElement:
         return self._get_results_elements('get_rs')
     def get_gor(self):
         return self._get_results_elements('get_gor')
-    def get_uo(self):
-        return self._get_results_elements('get_uo')
-    def get_bo(self):
-        return self._get_results_elements('get_bo')
+    def get_u(self):
+        return self._get_results_elements('get_u')
+    def get_b(self):
+        return self._get_results_elements('get_b')
 
     def get_h_cumulative(self):
         h = self.get_h()
@@ -730,6 +730,7 @@ class CompositeFlowElement:
             element.set_q_in(prev_element.get_q_out()[-1])
             self._log(f'  Flow element: {i+2}')
             element.solve_out_flow()
+            prev_element = element
         self.set_p_out(self._elements[-1].get_p_out()[-1])
         self.set_t_out(self._elements[-1].get_t_out()[-1])
         self.set_q_out(self._elements[-1].get_q_out()[-1])
@@ -751,6 +752,7 @@ class CompositeFlowElement:
             element.set_q_out(prev_element.get_q_in()[0])
             self._log(f' Flow element: {len(self._elements) - i - 1}')
             element.solve_in_flow()
+            prev_element = element
         self.set_p_in(self._elements[0].get_p_in()[0])
         self.set_t_in(self._elements[0].get_t_in()[0])
         self.set_q_in(self._elements[0].get_q_in()[0])

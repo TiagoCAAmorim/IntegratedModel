@@ -243,6 +243,7 @@ def vertical_two_elements_test():
 def define_system_ex1(debug_mode):
     line = flow.CompositeFlowElement(debug_mode=debug_mode)
     define_common_parameters(line)
+    line.pvt.set_wfr(1.)
     line.set_number_divisions(100)
 
     line.add_element()
@@ -348,13 +349,13 @@ def system_ex1_vfp():
     plt.title('System with 3 Elements')
     save_plot(plt,'system1_operation')
 
-    simple_plot(line.get_h_cumulative(), line.get_uo(),
+    simple_plot(line.get_h_cumulative(), line.get_u(),
                 'Length [m]', 'uo [cP]',
                 'System with 3 Elements', 'system1_uo')
     simple_plot(line.get_h_cumulative(), line.get_rs(),
                 'Length [m]', 'rs [m3/m3]',
                 'System with 3 Elements', 'system1_rs')
-    simple_plot(line.get_h_cumulative(), line.get_bo(),
+    simple_plot(line.get_h_cumulative(), line.get_b(),
                 'Length [m]', 'bo [-]',
                 'System with 3 Elements', 'system1_bo')
     simple_plot(line.get_h_cumulative(), line.get_re(),
@@ -413,6 +414,70 @@ def system_ex1_sensibility():
     plt.title('System with 3 Elements')
     save_plot(plt,'system1_d')
 
+def define_system_ex2(debug_mode):
+    line = flow.CompositeFlowElement(debug_mode=debug_mode)
+    define_common_parameters(line)
+    line.pvt.set_wfr(1.)
+    line.set_number_divisions(100)
+
+    line.add_element()
+    line.current_element.set_h(1320.)
+    line.current_element.set_z_in(0.)
+    line.current_element.set_z_out(-1320.)
+    line.current_element.set_number_divisions(132)
+
+    line.add_element()
+    line.current_element.set_h(500.)
+    line.current_element.set_z_in(-1320.)
+    line.current_element.set_z_out(-1320.)
+    line.current_element.set_number_divisions(5)
+
+    line.add_element()
+    line.current_element.set_h(1600.)
+    line.current_element.set_z_in(-1320.)
+    line.current_element.set_z_out(-1600. + -1320.)
+    line.current_element.set_number_divisions(160)
+
+    return line
+
+def system_ex2():
+    print('System with 3 Elements - Example 2: water injector')
+
+    line = define_system_ex2(debug_mode=debug_mode)
+
+    line.set_p_in(146.)
+    line.set_t_out(50.)
+    line.set_q_std(350. * 24.)
+
+    print('  Calculation from Inlet to Outlet')
+    line.solve_out_flow()
+    print(f'    Pressure in: {line.get_p_in()[0]:.3f} bar.')
+    print(f'    Pressure out: {line.get_p_out()[-1]:.3f} bar.')
+
+    _ = plt.figure()
+    plt.plot([0] + line.get_h_cumulative(), [line.get_p_in()[0]] + line.get_p_out())
+
+    print('  Calculation from Outlet to Inlet')
+    line.set_p_out(line._elements[-1].get_p_out()[-1])
+    line.set_q_out(line._elements[-1].get_q_out()[-1])
+    line.set_p_in(None)
+    line.set_q_in(None)
+    line.solve_in_flow()
+    print(f'    Pressure in: {line.get_p_in()[0]:.3f} bar.')
+    print(f'    Pressure out: {line.get_p_out()[-1]:.3f} bar.')
+
+    plt.plot([0] + line.get_h_cumulative(), line.get_p_in() + [line.get_p_out()[-1]])
+
+    plt.plot(line.get_h_cumulative(), line.get_p_bubble())
+
+    ax = plt.gca()
+    ax.legend(['Inlet to Outlet', 'Outlet to Inlet','Bubble pressure'])
+    plt.grid()
+    plt.xlabel('Lenght along element [m]')
+    plt.ylabel('p [bar]')
+    plt.title('System with 3 Elements: Qwi')
+    save_plot(plt,'system2')
+
 if __name__ == "__main__":
     horizontal_test()
     horizontal_divided_test()
@@ -424,3 +489,5 @@ if __name__ == "__main__":
     system_ex1()
     system_ex1_vfp()
     system_ex1_sensibility()
+    system_ex2()
+    pass
