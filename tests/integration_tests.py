@@ -100,7 +100,7 @@ def set_reservoir(model):
     model.set_t_end(300. * 2.)
 
 def test1():
-    model = integration.Integration()
+    model = integration.Integration(debug=True)
 
     set_pvt(model.pvt)
     set_reservoir(model.reservoir)

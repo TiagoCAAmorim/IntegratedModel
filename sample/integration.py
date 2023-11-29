@@ -5,7 +5,7 @@ import topside
 
 class Integration:
 
-    def __init__(self):
+    def __init__(self, debug=False):
         self.pvt = pvt.PVT()
         self.reservoir = reservoir.Simple2D_OW()
         self.flow_prod = flow.CompositeFlowElement()
@@ -25,6 +25,12 @@ class Integration:
 
         self._last_pwf = None
         self._dt = None
+
+        self._debug = debug
+
+    def _log(self, message):
+        if self._debug:
+            print(message)
 
     def set_reservoir_t(self, value):
         self._reservoir_t = value
@@ -67,7 +73,9 @@ class Integration:
         t = self.reservoir.get_t()[-1]
         qo = self.reservoir.get_well_qo()[-1]
         qw = self.reservoir.get_well_qw()[-1]
-        print(f' t = {t:0.2f} days, Pwf = {self._last_pwf:0.2f} bar, Qo = {qo:0.2f} m3/d, Qw = {qw:0.2f} m3/d')
+        phead = self.flow_prod.get_p_out()[-1]
+        pwf_flow = self.flow_prod.get_p_in()[0]
+        self._log(f' t = {t:0.2f} days, Pwf_res = {self._last_pwf:0.2f} bar, Qo = {qo:0.2f} m3/d, Qw = {qw:0.2f} m3/d, , Pwf_flow = {pwf_flow:0.2f} bar, Phead = {phead:0.2f} bar')
 
     def run_simulation(self, dt):
         self.initialize()
