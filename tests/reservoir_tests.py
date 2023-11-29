@@ -18,17 +18,17 @@ def simple_plot(x,y, x_label, y_label, title, file):
     plt.title(title)
     save_plot(plt,file)
 
-def simple_2D_2f():
+def simple_2D_2f(i, j):
     model = reservoir.Simple2D_OW()
     model.set_p_init(340.)
     model.set_k(1000.)
     model.set_phi(0.3)
 
-    model.set_hi(600.)
-    model.set_hj(600.)
+    model.set_ni(i)
+    model.set_nj(j)
     model.set_hk(30.)
-    model.set_ni(5)
-    model.set_nj(5)
+    model.set_hi(600.)
+    model.set_hj(model.get_hi() * model.get_nj() / model.get_ni())
 
     model.set_bo(1.01)
     model.set_uo(130.)
@@ -47,10 +47,10 @@ def simple_2D_2f():
     model.set_skin(0.)
     model.set_pwf(330.)
     model.set_qwi(350.)
-    model.set_t_end(300. * 5.)
+    model.set_t_end(0.20)
 
     # model.initialize()
-    model.run_simulation(2.0)
+    model.run_simulation(0.10)
 
     t = model.get_t()
     s1 = model.get_sw_cell(0,0)
@@ -114,5 +114,10 @@ def simple_2D_2f():
 
 
 if __name__ == "__main__":
-    simple_2D_2f()
+    for i in {3, 5, 9, 10, 20, 40, 50}: #, 100, 200, 500, 1000}:
+        print(f'i = {i}, j = {1}')
+        simple_2D_2f(i,1)
+        print(f'i = {i}, j = {i}')
+        simple_2D_2f(i,i)
+
     pass
