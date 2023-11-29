@@ -279,23 +279,24 @@ class Simple2D_OW:
         x = self._x_list[-1].copy()
         n = 0
         # r = self.build_r(x, dt)
-        while n < 10:
+        while n < 50:
             x_last = x.copy()
             k = self.build_k(x, dt)
             f = self.build_f(dt)
             x =  np.linalg.solve(k,f)
 
-            # if len(self._t_list) == 1:
-            #     np.savetxt('x_prev_mat.csv', self._x_list[-1], delimiter=',')
-            #     np.savetxt('k_mat.csv', k, delimiter=',')
-            #     np.savetxt('f_mat.csv', f, delimiter=',')
-            #     np.savetxt('x_mat.csv', x, delimiter=',')
-
+            if len(self._t_list) == 1:
+                folder = ''
+                # np.savetxt(f'{folder}x_prev_{self.get_ni()}_{self.get_nj()}.csv', self._x_list[-1], delimiter=',')
+                # np.savetxt(f'{folder}k_{self.get_ni()}_{self.get_nj()}.csv', k, delimiter=',')
+                # np.savetxt(f'{folder}f_{self.get_ni()}_{self.get_nj()}.csv', f, delimiter=',')
+                # np.savetxt(f'{folder}x_{self.get_ni()}_{self.get_nj()}.csv', x, delimiter=',')
+            # print(f'{n:2d}. error = {np.linalg.norm(x-x_last):0.3g}')
             if np.linalg.norm(x-x_last) < 0.01:
                 self._x_current = x
                 return
             n += 1
-        print("Didn't converge!")
+        print(f" {self._t_list[-1]:0.2g} days: Flow simulation didn't converge after {n} iterations. ||error|| = {np.linalg.norm(x-x_last):0.3g}")
         self._x_current = x
         return
 
