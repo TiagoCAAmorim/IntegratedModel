@@ -44,7 +44,7 @@ class WaterPump:
         return head * qm * 9.81 / self._eff * 1E-6
 
     def get_power_from_delta_p(self, delta_p):
-        head = delta_p / (9.81 * 1000.)
+        head = delta_p * 1E5 / (9.81 * 1000.)
         return self.get_power_from_head(head)
 
 class GasCompressor:
