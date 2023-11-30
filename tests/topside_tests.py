@@ -31,7 +31,7 @@ def water_pump_test():
 
     power = pump.get_power_from_head(2100.)
 
-    print(f'Water pump power demand = {power} kW')
+    print(f'Water pump power demand = {power} MW')
 
 def gas_comp_test():
     comp = topside.GasCompressor()
@@ -45,7 +45,7 @@ def gas_comp_test():
     comp.pvt.set_dg(0.876)
 
     power = comp.get_power()
-    print(f'Gas compressor power demand = {power} kW')
+    print(f'Gas compressor power demand = {power} MW')
 
 def co2_emission_test():
     emission = topside.CO2_Emission()
