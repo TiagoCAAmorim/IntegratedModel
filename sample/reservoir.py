@@ -285,7 +285,7 @@ class Simple2D_OW:
             f = self.build_f(dt)
             x =  np.linalg.solve(k,f)
 
-            if len(self._t_list) == 1:
+            # if len(self._t_list) == 1:
                 # folder = ''
                 # np.savetxt(f'{folder}x_prev_{self.get_ni()}_{self.get_nj()}.csv', self._x_list[-1], delimiter=',')
                 # np.savetxt(f'{folder}f_{self.get_ni()}_{self.get_nj()}.csv', f, delimiter=',')
