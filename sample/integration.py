@@ -40,6 +40,8 @@ class Integration:
         self._well_head_t = value
     def set_well_head_p(self, value):
         self._well_head_p = value
+    def set_gas_loss(self, value):
+        self._gas_loss = value
 
     def initialize(self):
         self.pvt.set_t(self._reservoir_t)
@@ -90,7 +92,9 @@ class Integration:
         self._log(f' Pwf_injw = {pwf_inj:0.2f}, Phead_injw = {phead:0.2f} bar, Power = {power_pump:0.2f} MW')
 
     def solve_gas_balance(self):
-        pass
+        qgp = self.reservoir.get_well_qo()[-1] * self.pvt.get_rs()
+        qg_loss = qgp * self._gas_loss
+        qg_fuel = self.emission.turbine.get_fuel()
 
     def solve_emissions(self):
         pass
