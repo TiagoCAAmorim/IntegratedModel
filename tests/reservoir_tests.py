@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 debug_mode = True
 
 path = os.path.abspath(os.path.dirname(__file__))
-def save_plot(plt, name):
-    plt.savefig(path+'/plots/sim/'+name+'.png')
-    # plt.show()
+def save_plot(plot, name):
+    plot.savefig(path+'/plots/sim/'+name+'.png')
+    plot.close()
 
 def simple_plot(x,y, x_label, y_label, title, file):
     _ = plt.figure()
@@ -47,7 +47,7 @@ def simple_2D_2f(i, j):
     model.set_skin(0.)
     model.set_pwf(330.)
     model.set_qwi(350.)
-    model.set_t_end(0.20)
+    model.set_t_end(100.)
 
     # model.initialize()
     model.run_simulation(0.10)
@@ -110,14 +110,11 @@ def simple_2D_2f(i, j):
         plt.title('Sw Map')
         save_plot(plt,'sim_final_sw')
 
-    pass
-
 
 if __name__ == "__main__":
-    for i in {3, 5, 9, 10, 20, 40, 50}: #, 100, 200, 500, 1000}:
+    for i in [3, 5, 7, 9, 10]: #, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]:
         print(f'i = {i}, j = {1}')
         simple_2D_2f(i,1)
         print(f'i = {i}, j = {i}')
         simple_2D_2f(i,i)
-
     pass

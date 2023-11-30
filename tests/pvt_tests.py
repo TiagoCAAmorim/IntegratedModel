@@ -3,9 +3,9 @@ from context import pvt
 import matplotlib.pyplot as plt
 
 path = os.path.abspath(os.path.dirname(__file__))
-def save_plot(plt, name):
-    plt.savefig(path+'/plots/pvt/'+name+'.png')
-    # plt.show()
+def save_plot(plot, name):
+    plot.savefig(path+'/plots/pvt/'+name+'.png')
+    plot.close()
 
 def rs_test():
     pvt1 = pvt.PVT()

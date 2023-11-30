@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 debug_mode = True
 
 path = os.path.abspath(os.path.dirname(__file__))
-def save_plot(plt, name):
-    plt.savefig(path+'/plots/integration/'+name+'.png')
-    # plt.show()
+def save_plot(plot, name):
+    plot.savefig(path+'/plots/integration/'+name+'.png')
+    plot.close()
 
 def simple_plot(x,y, x_label, y_label, title, file):
     _ = plt.figure()
