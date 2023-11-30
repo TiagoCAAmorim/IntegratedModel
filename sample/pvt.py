@@ -8,7 +8,7 @@ class PVT:
 
         self._api = None
         self._do = None
-        self._dw = 1.
+        self._dw = 1.0
         self._dg = None
         self._rho_air = 1.2 # kg/m3
         self._rhow = 1000. # kg/m3
@@ -285,7 +285,7 @@ class PVT:
             if self._rs is None:
                 self.calculate_rs_Standing()
             if self._bo is None:
-                self.calculate_bo_Standing()
+                self.calculate_bo_Standing(auto)
         else:
             if self._rs is None or self._bo is None:
                 return None
@@ -301,7 +301,7 @@ class PVT:
             return None
         if auto:
             if self._bg is None:
-                self.calculate_bg(True)
+                self.calculate_bg(auto)
         else:
             if self._bg is None:
                 return None
@@ -316,7 +316,7 @@ class PVT:
         if self._wfr > 0. and self._dw is None:
             return None
         if self._wfr == 1.:
-            return self._rhow
+            return self._dw * self._rhow
         rhoo = self.get_rhoo_in_place(auto)
         if self._wfr < 1. and rhoo is None:
             return None
@@ -365,6 +365,8 @@ class PVT:
         return self._y_n2
     def get_z(self):
         return self._z
+    def get_gas_mw(self):
+        return 29. * self.get_dg()
     def get_uo_do(self):
         return self._uo_do
     def get_uo(self):
@@ -584,7 +586,7 @@ class PVT:
                 if self._bo_bubble is None:
                     self.calculate_bo_bubble_Standing()
                 if self._co_bubble is None:
-                    self.calculate_co_bubble_Standing()
+                    self.calculate_co_bubble_Standing(auto)
             else:
                 self._check(['co_bubble','bo_bubble'])
             bo = self._bo_bubble * math.exp(self._co_bubble * (self._p_bubble - self._p))
@@ -682,7 +684,7 @@ class PVT:
         self._check(['p','t'])
         if auto:
             if self._z is None:
-                self.calculate_z_Standing()
+                self.calculate_z_Standing(auto)
         else:
             self._check(['z'])
         self._bg = self._z * self._p_std / self._p * (self._t + 273.15) / (self._t_std + 273.15)

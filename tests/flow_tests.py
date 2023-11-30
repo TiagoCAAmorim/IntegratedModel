@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 debug_mode = True
 
 path = os.path.abspath(os.path.dirname(__file__))
-def save_plot(plt, name):
-    plt.savefig(path+'/plots/flow/'+name+'.png')
-    # plt.show()
+def save_plot(plot, name):
+    plot.savefig(path+'/plots/flow/'+name+'.png')
+    plot.close()
 
 def simple_plot(x,y, x_label, y_label, title, file):
     _ = plt.figure()
@@ -249,26 +249,28 @@ def define_system_ex1(debug_mode):
     line.current_element.set_h(1600.)
     line.current_element.set_z_in(-1600. + -1320.)
     line.current_element.set_z_out(-1320.)
-    line.current_element.set_number_divisions(160)
+    line.current_element.set_number_divisions(2)
 
     line.add_element()
     line.current_element.set_h(500.)
     line.current_element.set_z_in(-1320.)
     line.current_element.set_z_out(-1320.)
-    line.current_element.set_number_divisions(5)
+    line.current_element.set_number_divisions(1)
 
     line.add_element()
     line.current_element.set_h(1320.)
     line.current_element.set_z_in(-1320.)
     line.current_element.set_z_out(0.)
-    line.current_element.set_number_divisions(132)
+    line.current_element.set_number_divisions(2)
 
     return line
 
-def system_ex1():
-    print('System with 3 Elements - Example 1')
+def system_ex1(wfr=0.0):
+    print(f'System with 3 Elements - Example 1: wfr = {wfr*100:0.0f}%')
 
     line = define_system_ex1(debug_mode=debug_mode)
+    line.pvt.set_wfr(wfr)
+    line.update_pvt()
     print('  Calculation from Inlet to Outlet')
     line.solve_out_flow()
     print(f'    Pressure in: {line.get_p_in()[0]:.3f} bar.')
@@ -295,8 +297,8 @@ def system_ex1():
     plt.grid()
     plt.xlabel('Lenght along element [m]')
     plt.ylabel('p [bar]')
-    plt.title('System with 3 Elements')
-    save_plot(plt,'system1')
+    plt.title(f'System with 3 Elements: wfr = {wfr*100:0.0f}%')
+    save_plot(plt,f'system1_{wfr*100:0.0f}pc')
 
 def system_ex1_vfp():
     print('System with 3 Elements - (q,p) plot')
@@ -478,15 +480,17 @@ def system_ex2():
     save_plot(plt,'system2')
 
 if __name__ == "__main__":
-    horizontal_test()
-    horizontal_divided_test()
-    horizontal_two_elements_test()
-    vertical_test()
-    vertical_divided_test()
-    vertical_two_elements_test()
-    vertical_sensibility_test()
+    # horizontal_test()
+    # horizontal_divided_test()
+    # horizontal_two_elements_test()
+    # vertical_test()
+    # vertical_divided_test()
+    # vertical_two_elements_test()
+    # vertical_sensibility_test()
     system_ex1()
-    system_ex1_vfp()
-    system_ex1_sensibility()
-    system_ex2()
+    system_ex1(0.5)
+    system_ex1(1.0)
+    # system_ex1_vfp()
+    # system_ex1_sensibility()
+    # system_ex2()
     pass

@@ -2,10 +2,11 @@ import math
 import pvt
 import ipr
 import common
+import reservoir
 
 class SubFlowElement:
 
-    def __init__(self, element=None):
+    def __init__(self, element=None, debug=False):
         self._eps = 1E-12
         self._max_iter = 100
         self._g = 9.81 # m/s^2
@@ -38,6 +39,8 @@ class SubFlowElement:
         self._hl = None
 
         self.pvt = pvt.PVT()
+
+        self._debug = debug
 
         if element is not None:
             self._copy_all_properties(element)
@@ -131,6 +134,10 @@ class SubFlowElement:
         element.pvt = self.pvt.copy()
 
         return element
+
+    def _log(self, message):
+        if self._debug:
+            print(message)
 
     def get_variables_list(self):
         return self.variables.get_list()
@@ -305,7 +312,9 @@ class SubFlowElement:
         hl = self._hl
         htm = 0.  # not implemented yet
         dv2 = self.calculate_delta_v2_g()
-        return -1E-5 * self.pvt.get_rho() * self._g * (dz + hl + htm + dv2)
+        deltap = -1E-5 * self.pvt.get_rho() * self._g * (dz + hl + htm + dv2)
+        self._log(f'  dz = {dz:0.2f}, hl = {hl:0.2f}, dv2 = {dv2:0.2f}, deltap = {deltap:0.2f}, rho = {self.pvt.get_rho():0.2f}, u = {self.pvt.get_u():0.2f}')
+        return deltap
 
     def calculate_p_in(self):
         self.set_p_in(self._p_out - self.calculate_delta_p())
@@ -489,7 +498,7 @@ class FlowElement(SubFlowElement):
         return [sum(h[:i + 1]) for i in range(len(h))]
 
     def _build_element_list(self):
-        self._elements = [SubFlowElement(self) for _ in range(self._n)]
+        self._elements = [SubFlowElement(self, self._debug) for _ in range(self._n)]
         for i, element in enumerate(self._elements):
             element._h = self._h / self._n
             element._z_in = self._z_in + i * (self._z_out - self._z_in)/ self._n
@@ -548,6 +557,8 @@ class CompositeFlowElement:
         self._n = 1
         self.pvt = pvt.PVT()
         self.ipr = ipr.IPR()
+        self._reservoir = None
+        self._dt = None
 
         self._p_in = None
         self._p_out = None
@@ -621,9 +632,14 @@ class CompositeFlowElement:
     def set_max_iter(self,i):
         self._max_iter = i
 
+    def set_dt(self,value):
+        self._dt = value
+    def set_reservoir(self, reservoir_obj):
+        self._reservoir = reservoir_obj
+
     def update_pvt(self):
         for element in self._elements:
-            element[-1].pvt = self.pvt.copy()
+            element.pvt = self.pvt.copy()
 
     def add_element(self):
         self._elements.append(FlowElement(self._debug))
@@ -757,18 +773,33 @@ class CompositeFlowElement:
         self.set_t_in(self._elements[0].get_t_in()[0])
         self.set_q_in(self._elements[0].get_q_in()[0])
 
+    def solve_reservoir(self, pwf):
+        return self._reservoir.try_pwf(pwf, self._dt)
+
     def _pwf_error(self, pwf):
-        q_std = self.ipr.get_q(pwf)
+        if self._reservoir is None:
+            q_std = self.ipr.get_q(pwf)
+        else:
+            qo_std, qw_std = self.solve_reservoir(pwf)
+            q_std = qo_std + qw_std
+            wfr = qw_std / q_std
+            self.pvt.set_wfr(wfr)
         self.set_q_std(q_std)
         self.solve_in_flow()
         return pwf - self.get_p_in()[0]
 
-    def solve_operation_point(self):
+    def solve_operation_point(self, pwf_test=None):
         self._log(f'Operation point search')
-        p0 = self.ipr._pr * 0.98
+        if pwf_test is None:
+            p0 = self.ipr._pr * 0.98
+        else:
+            p0 = pwf_test
         f0 = self._pwf_error(p0)
         self._log(f' i=0, p={p0}, f={f0}')
-        p1 = self.ipr._pr * 0.96
+        if pwf_test is None:
+            p1 = self.ipr._pr * 0.96
+        else:
+            p1 = pwf_test * 0.95
         f1 = self._pwf_error(p1)
         self._log(f' i=1, p={p1}, f={f1}')
         p_best = p0
