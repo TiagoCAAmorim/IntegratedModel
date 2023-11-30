@@ -296,7 +296,7 @@ class Simple2D_OW:
                 self._x_current = x
                 return
             n += 1
-        print(f" {self._t_list[-1]:0.2g} days: Flow simulation didn't converge after {n} iterations. ||error|| = {np.linalg.norm(x-x_last):0.3g}")
+        print(f" {self._t_list[-1]:10.2f} days: Flow simulation didn't converge after {n} iterations. ||error|| = {np.linalg.norm(x-x_last):0.3g}")
         self._x_current = x
         return
 
@@ -336,11 +336,13 @@ class Simple2D_OW:
     def get_sw_cell(self,i , j):
         p = self.get_cell_number(i, j)
         sw = [x[2*p-1] for x in self._x_list]
+        sw = [float(sw) for sw in sw]
         return sw
 
     def get_pr_cell(self,i , j):
         p = self.get_cell_number(i, j)
         pr = [x[2*p-2] for x in self._x_list]
+        pr = [float(pr) for pr in pr]
         return pr
 
     def get_well_qo(self):
