@@ -19,7 +19,7 @@ def simple_plot(x,y, x_label, y_label, title, file):
     save_plot(plt,file)
 
 def set_system_prod(line):
-    line.set_d(6. * 2.54/100.)
+    line.set_d(4. * 2.54/100.)
     line.set_e(0.6 / 1000.)
     line.set_number_divisions(100)
 
@@ -27,7 +27,7 @@ def set_system_prod(line):
     line.current_element.set_h(1600.)
     line.current_element.set_z_in(-1600. + -1320.)
     line.current_element.set_z_out(-1320.)
-    line.current_element.set_number_divisions(160)
+    line.current_element.set_number_divisions(5)
 
     line.add_element()
     line.current_element.set_h(500.)
@@ -39,10 +39,10 @@ def set_system_prod(line):
     line.current_element.set_h(1320.)
     line.current_element.set_z_in(-1320.)
     line.current_element.set_z_out(0.)
-    line.current_element.set_number_divisions(132)
+    line.current_element.set_number_divisions(5)
 
 def set_system_inj(line):
-    line.set_d(6. * 2.54/100.)
+    line.set_d(4. * 2.54/100.)
     line.set_e(0.6 / 1000.)
     line.set_number_divisions(100)
 
@@ -50,7 +50,7 @@ def set_system_inj(line):
     line.current_element.set_h(1320.)
     line.current_element.set_z_in(0.)
     line.current_element.set_z_out(-1320.)
-    line.current_element.set_number_divisions(132)
+    line.current_element.set_number_divisions(5)
 
     line.add_element()
     line.current_element.set_h(500.)
@@ -62,7 +62,7 @@ def set_system_inj(line):
     line.current_element.set_h(1600.)
     line.current_element.set_z_in(-1320.)
     line.current_element.set_z_out(-1600. + -1320.)
-    line.current_element.set_number_divisions(160)
+    line.current_element.set_number_divisions(5)
 
 def set_pvt(pvt):
     pvt.set_api(15.)
@@ -74,9 +74,9 @@ def set_reservoir(model):
     model.set_k(1000.)
     model.set_phi(0.3)
 
-    model.set_hi(300.)
-    model.set_hj(300.)
-    model.set_hk(20.)
+    model.set_hi(800.)
+    model.set_hj(800.)
+    model.set_hk(100.)
     model.set_ni(5)
     model.set_nj(5)
 
@@ -96,7 +96,7 @@ def set_reservoir(model):
     model.set_rw(4 * 2.54 / 100.)
     model.set_skin(0.)
     # model.set_pwf(330.)
-    model.set_qwi(350.)
+    model.set_qwi(1000.)
     model.set_t_end(300. * 2.)
 
 def test1():
@@ -109,6 +109,7 @@ def test1():
     set_system_inj(model.flow_inj)
 
     model.water_pump.set_eff(0.65)
+
     model.separator.set_ks(0.03)
     model.separator.set_d(0.75)
 
@@ -128,9 +129,6 @@ def test1():
     model.set_reservoir_p(340.)
     model.set_well_head_t(50.)
     model.set_well_head_p(20.)
-
-    # model.initialize()
-    # model.advance_simulation(0.1)
 
     model.run_simulation(2.0)
 
