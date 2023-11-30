@@ -286,11 +286,11 @@ class Simple2D_OW:
             x =  np.linalg.solve(k,f)
 
             if len(self._t_list) == 1:
-                # folder = ''
-                # np.savetxt(f'{folder}x_prev_{self.get_ni()}_{self.get_nj()}.csv', self._x_list[-1], delimiter=',')
-                # np.savetxt(f'{folder}f_{self.get_ni()}_{self.get_nj()}.csv', f, delimiter=',')
-                # np.savetxt(f'{folder}x_{self.get_ni()}_{self.get_nj()}.csv', x, delimiter=',')
-                # np.savetxt(f'{folder}k_{self.get_ni()}_{self.get_nj()}.csv', k, delimiter=',')
+                folder = ''
+                np.savetxt(f'{folder}x_prev_{self.get_ni()}_{self.get_nj()}.csv', self._x_list[-1], delimiter=',')
+                np.savetxt(f'{folder}f_{self.get_ni()}_{self.get_nj()}.csv', f, delimiter=',')
+                np.savetxt(f'{folder}x_{self.get_ni()}_{self.get_nj()}.csv', x, delimiter=',')
+                np.savetxt(f'{folder}k_{self.get_ni()}_{self.get_nj()}.csv', k, delimiter=',')
             # print(f'{n:2d}. error = {np.linalg.norm(x-x_last):0.3g}')
             if np.linalg.norm(x-x_last) < 0.01:
                 self._x_current = x
