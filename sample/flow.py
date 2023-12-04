@@ -821,7 +821,7 @@ class CompositeFlowElement:
             p_best = p1
             f_best = abs(f1)
         i = 0
-        while i < self._max_iter:
+        while i < self._max_iter and (abs(f1 - f0) > 1E-12):
             p2 = p1 - f1 * (p1 - p0) / (f1 - f0)
             f2 = self._pwf_error(p2)
             self._log(f' i={i+2}, p={p2}, f={f2}')
