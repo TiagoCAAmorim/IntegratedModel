@@ -4,6 +4,115 @@ import ipr
 import common
 import reservoir
 
+class Esp:
+    def __init__(self, debug=False):
+        # self._g = 9.81 # m/s^2
+        self._eff = 1.
+        self._delta_p = 0.
+        self.pvt = pvt.PVT()
+        self._debug = debug
+        self._z_in = None
+        self._z_out = None
+        self._t_in = None
+        self._t_out = None
+        self._p_in = None
+        self._p_out = None
+        self._q_in = None
+        self._q_out = None
+        self._d = None
+
+    def set_eff(self,value):
+        self._eff = value
+    def set_delta_p(self,value):
+        self._delta_p = value
+
+    def get_eff(self):
+        return self._eff
+    def get_delta_p(self):
+        return self._delta_p
+
+    def set_z_in(self, value):
+        self._z_in = value
+        self._z_out = value
+    def set_z_out(self, value):
+        self.set_z_in(value)
+    def set_t_in(self, value):
+        self._t_in = value
+        self._t_out = value
+    def set_t_out(self, value):
+        self.set_t_in(value)
+    def set_p_in(self, value):
+        self._p_in = value
+    def set_p_out(self, value):
+        self._p_out = value
+    def set_q_in(self, value):
+        self._q_in = value
+        self._q_out = value
+    def set_q_out(self, value):
+        self.set_q_in(value)
+    def set_d(self, value):
+        pass
+
+    def get_z_in(self):
+        return [self._z_in]
+    def get_z_out(self):
+        return [self._z_out]
+    def get_t_in(self):
+        return [self._t_in]
+    def get_t_out(self):
+        return [self._t_out]
+    def get_p_in(self):
+        return [self._p_in]
+    def get_p_out(self):
+        return [self._p_out]
+    def get_q_in(self):
+        return [self._q_in]
+    def get_q_out(self):
+        return [self._q_out]
+
+    def get_h(self):
+        return [0.]
+    def get_p_bubble(self):
+        return [self.pvt.get_p_bubble()]
+    def get_rs(self):
+        return [self.pvt.get_rs()]
+    def get_gor(self):
+        return [self.pvt.get_gor()]
+    def get_u(self):
+        return [self.pvt.get_u()]
+    def get_b(self):
+        return [self.pvt.get_b()]
+    def get_rs(self):
+        return [self.pvt.get_rs()]
+    def get_re(self):
+        return [0.]
+    def get_f(self):
+        return [0.]
+    def get_v(self):
+        v = 4 * self.get_q_in()[0]/(24.*60.*60.) / (math.pi * self._d ** 2)
+        return [v]
+    def get_hl(self):
+        return [0.]
+
+    def solve_out_flow(self):
+        self.set_t_out(self.get_t_in()[0])
+        self.set_p_out(self.get_p_in()[0] + self.get_delta_p())
+
+        self.pvt.set_p((self.get_p_in()[0] + self.get_p_out()[0])/2.)
+        self.pvt.set_t(self.get_t_in()[0])
+        self.pvt.calculate_all_Standing()
+
+    def solve_in_flow(self):
+        self.set_t_in(self.get_t_out()[0])
+        self.set_p_in(self.get_p_out()[0] - self.get_delta_p())
+
+        self.pvt.set_p((self.get_p_in()[0] + self.get_p_out()[0])/2.)
+        self.pvt.set_t(self.get_t_in()[0])
+        self.pvt.calculate_all_Standing()
+
+    def get_power(self):
+        return self.get_delta_p()*1E5 * (self.get_q_in()[0]/(24.*60.*60.)) / self.get_eff() * 1E-6
+
 class SubFlowElement:
 
     def __init__(self, element=None, debug=False):
@@ -585,6 +694,8 @@ class CompositeFlowElement:
         # self._qg_std = None
         # self._qw_std = None
 
+        self._esp_dp = 0.
+
         self._d = None
         self._e = None
 
@@ -607,6 +718,8 @@ class CompositeFlowElement:
             'q_in':['Inlet volumetric flow rate', 'm3/d'],
             'q_out':['Outlet volumetric flow rate', 'm3/d'],
             'q_std':['Volumetric flow rate in standard conditions', 'm3/d'],
+
+            'esp_dp':['ESP delta pressure', 'bar'],
 
             'd':['Internal diameter', 'm'],
             'e':['Rugosity', 'm'],
@@ -644,6 +757,10 @@ class CompositeFlowElement:
         self._e = e
     def set_max_iter(self,i):
         self._max_iter = i
+    def set_esp_dp(self,value):
+        self._esp_dp = value
+    def get_esp_dp(self):
+        return self._esp_dp
 
     def set_dt(self,value):
         self._dt = value
@@ -654,12 +771,15 @@ class CompositeFlowElement:
         for element in self._elements:
             element.pvt = self.pvt.copy()
 
-    def add_element(self):
-        self._elements.append(FlowElement(self._debug))
-        self._elements[-1].pvt = self.pvt.copy()
-        self._elements[-1]._n = self._n
+    def add_element(self, is_esp=False):
+        if is_esp:
+            self._elements.append(Esp(self._debug))
+        else:
+            self._elements.append(FlowElement(self._debug))
+            self._elements[-1]._n = self._n
+            self._elements[-1]._e = self._e
         self._elements[-1]._d = self._d
-        self._elements[-1]._e = self._e
+        self._elements[-1].pvt = self.pvt.copy()
         if len(self._elements) > 1:
             self._elements[-1].set_z_in(self._elements[-2].get_z_out()[-1])
         else:

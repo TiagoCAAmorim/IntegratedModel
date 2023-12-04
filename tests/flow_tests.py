@@ -251,6 +251,9 @@ def define_system_ex1(debug_mode):
     line.current_element.set_z_out(-1320.)
     line.current_element.set_number_divisions(2)
 
+    line.add_element(True) #ESP
+    line.current_element.set_delta_p(50.)
+
     line.add_element()
     line.current_element.set_h(500.)
     line.current_element.set_z_in(-1320.)
@@ -392,7 +395,7 @@ def system_ex1_vfp():
     simple_plot(line.get_h_cumulative(), line.get_q_in(),
                 'Length [m]', 'Flow rate [m3/d]',
                 'System with 3 Elements', 'system1_q')
-    hl_m = [100*hl/h for (hl,h) in zip(line.get_hl(),line.get_h())]
+    hl_m = [100*hl/(h+1e-20) for (hl,h) in zip(line.get_hl(),line.get_h())]
     simple_plot(line.get_h_cumulative(), hl_m,
                 'Length [m]', 'Head loss / linear distance [m/100 m]',
                 'System with 3 Elements', 'system1_hl')

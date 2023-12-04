@@ -755,3 +755,12 @@ class PVT:
         A = math.pow(10, rs * (2.2E-7 * rs - 7.4E-4))
         b = 0.68 / math.pow(10, 8.62E-5 * rs) + 0.25 / math.pow(10, 1.1E-3 * rs) + 0.062 / math.pow(10, 3.74E-3 * rs)
         self._uo = A * math.pow(self._uo_do, b)
+
+    def calculate_all_Standing(self):
+        self.calculate_rs_Standing()
+        self.calculate_p_bubble_Standing()
+        self.calculate_co_bubble_Standing()
+        self.calculate_bo_bubble_Standing()
+        self.calculate_bo_Standing()
+        self.calculate_uo_do_Standing()
+        self.calculate_uo_Standing()
