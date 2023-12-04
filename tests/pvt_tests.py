@@ -379,14 +379,52 @@ def rhog_test():
     plt.title('Gas Density Using Standing Correlation')
     save_plot(plt,'rhog')
 
+
+def u_emulssion_test():
+    pvt1 = pvt.PVT()
+    pvt1.set_api(15.)
+    pvt1.set_dg(0.8)
+
+    pvt1.set_d(4 * 2.54/100.)
+    pvt1.set_q(1000./24./60./60.)
+    pvt1.set_p(100.)
+    pvt1.set_emulsion(True)
+
+    wcut_init = 0.
+    wcut_end  = 1.
+    steps = 100
+    wcut_list = [wcut_init + i/(steps-1)*(wcut_end - wcut_init) for i in range(steps)]
+    oil = {(20,50):[], (60,50):[], (20,60):[]}
+
+    _ = plt.figure()
+    for (gor, t) in oil:
+        pvt1.set_t(t)
+        pvt1.set_gor(gor)
+        for wc in wcut_list:
+            pvt1.set_wfr(wc)
+            pvt1.calculate_rs_Standing()
+            pvt1.calculate_uo_do_Standing()
+            pvt1.calculate_uo_Standing()
+            oil[(gor,t)].append(pvt1.get_u())
+        plt.plot(wcut_list, oil[(gor,t)])
+
+    ax = plt.gca()
+    ax.legend(['GOR='+str(gor)+' T='+str(t) for (gor,t) in oil.keys()])
+    plt.grid()
+    plt.xlabel('Water-cut [-]')
+    plt.ylabel('U [cP]')
+    plt.title(f'U with Emulsion @{pvt1.get_p()} bar')
+    save_plot(plt,'u_emulsion')
+
 if __name__ == "__main__":
-    rs_test()
-    pb_test()
-    pb_test2()
-    bo_test()
-    bo_test2()
-    z_test()
-    bg_test()
-    uo_test()
-    rhoo_test()
-    rhog_test()
+    # rs_test()
+    # pb_test()
+    # pb_test2()
+    # bo_test()
+    # bo_test2()
+    # z_test()
+    # bg_test()
+    # uo_test()
+    # rhoo_test()
+    # rhog_test()
+    u_emulssion_test()
