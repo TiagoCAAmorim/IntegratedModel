@@ -270,6 +270,7 @@ def system_ex1(wfr=0.0):
 
     line = define_system_ex1(debug_mode=debug_mode)
     line.pvt.set_wfr(wfr)
+    line.pvt.set_emulsion(True)
     line.update_pvt()
     print('  Calculation from Inlet to Outlet')
     line.solve_out_flow()
@@ -299,6 +300,26 @@ def system_ex1(wfr=0.0):
     plt.ylabel('p [bar]')
     plt.title(f'System with 3 Elements: wfr = {wfr*100:0.0f}%')
     save_plot(plt,f'system1_{wfr*100:0.0f}pc')
+
+def system_ex1_emulsion():
+    print('System with 3 Elements - Example 1: Emulsion')
+
+    line = define_system_ex1(debug_mode=False)
+    line.pvt.set_emulsion(True)
+    line.update_pvt()
+    print('  Calculation from Inlet to Outlet')
+
+    n = 201
+    wfr_list = [i/(n-1) for i in range(n)]
+    phead = []
+    for wfr in wfr_list:
+        line.pvt.set_wfr(wfr)
+        line.update_pvt()
+        line.solve_out_flow()
+        phead.append(line.get_p_out()[-1])
+        print(f'  WCUT = {wfr*100.:.1f}%\tPhead = {phead[-1]:.3f} bar')
+
+    simple_plot(wfr_list, phead, 'Water Cut [-]', 'Head pressure [bar]', 'Sensibility to Emulsion', 'system1_emulsion')
 
 def system_ex1_vfp():
     print('System with 3 Elements - (q,p) plot')
@@ -487,10 +508,12 @@ if __name__ == "__main__":
     vertical_divided_test()
     vertical_two_elements_test()
     vertical_sensibility_test()
-    system_ex1()
-    system_ex1(0.5)
-    system_ex1(1.0)
+    system_ex1(0.0)
+    system_ex1(0.1)
+    system_ex1(0.2)
+    system_ex1(0.3)
+    system_ex1(0.4)
+    system_ex1_emulsion()
     system_ex1_vfp()
     system_ex1_sensibility()
     system_ex2()
-    pass
