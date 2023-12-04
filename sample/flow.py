@@ -8,6 +8,7 @@ class Esp:
     def __init__(self, debug=False):
         # self._g = 9.81 # m/s^2
         self._eff = 1.
+        self._eff_coef = 200.
         self._delta_p = 0.
         self.pvt = pvt.PVT()
         self._debug = debug
@@ -23,6 +24,8 @@ class Esp:
 
     def set_eff(self,value):
         self._eff = value
+    def set_eff_coef(self,value):
+        self._eff_coef = value
     def set_delta_p(self,value):
         self._delta_p = value
 
@@ -100,6 +103,8 @@ class Esp:
 
         self.pvt.set_p((self.get_p_in()[0] + self.get_p_out()[0])/2.)
         self.pvt.set_t(self.get_t_in()[0])
+        self.pvt.set_d(self._d)
+        self.pvt.set_q(self._q_in)
         self.pvt.calculate_all_Standing()
 
     def solve_in_flow(self):
@@ -108,10 +113,16 @@ class Esp:
 
         self.pvt.set_p((self.get_p_in()[0] + self.get_p_out()[0])/2.)
         self.pvt.set_t(self.get_t_in()[0])
+        self.pvt.set_d(self._d)
+        self.pvt.set_q(self._q_in)
         self.pvt.calculate_all_Standing()
 
+    def get_true_eff(self):
+        return self.get_eff() * math.exp(1./self._eff_coef * (1 - self.pvt.get_u() / self.pvt.get_uw()))
+
     def get_power(self):
-        return self.get_delta_p()*1E5 * (self.get_q_in()[0]/(24.*60.*60.)) / self.get_eff() * 1E-6
+        eff = self.get_true_eff()
+        return self.get_delta_p()*1E5 * (self.get_q_in()[0]/(24.*60.*60.)) / eff * 1E-6
 
 class SubFlowElement:
 
@@ -905,6 +916,33 @@ class CompositeFlowElement:
         self.set_p_in(self._elements[0].get_p_in()[0])
         self.set_t_in(self._elements[0].get_t_in()[0])
         self.set_q_in(self._elements[0].get_q_in()[0])
+
+    def set_esp_eff(self, value):
+        for element in self._elements:
+            if isinstance(element, Esp):
+                element.set_eff(value)
+
+    def set_esp_delta_p(self, value):
+        for element in self._elements:
+            if isinstance(element, Esp):
+                element.set_delta_p(value)
+
+    def set_esp_eff_coef(self, value):
+        for element in self._elements:
+            if isinstance(element, Esp):
+                element.set_eff_coef(value)
+
+    def get_esp_true_eff(self):
+        for element in self._elements:
+            if isinstance(element, Esp):
+                return element.get_true_eff()
+        return 0.
+
+    def get_esp_power(self):
+        for element in self._elements:
+            if isinstance(element, Esp):
+                return element.get_power()
+        return 0.
 
     def solve_reservoir(self, pwf):
         return self._reservoir.try_pwf(pwf, self._dt)

@@ -394,6 +394,8 @@ class PVT:
         return self._uo_do
     def get_uo(self):
         return self._uo
+    def get_uw(self):
+        return self._uw
     def get_wfr(self):
         return self._wfr
 
@@ -405,7 +407,10 @@ class PVT:
 
     def get_u_emulsion(self):
         if self._q is None or self._d is None:
+            print("######################################################################################")
             print("### Could not calculate shear rate. Inform volumetric rate and/or diameter in PVT. ###")
+            print("######################################################################################")
+            self.set_emulsion(False)
             return self.get_u()
         shear_rate = 32. * self._q / (math.pi * math.pow(self._d, 3.))
         k1 = np.interp(shear_rate, self._ronningsen_k['shear_rate'], self._ronningsen_k['k1'])
