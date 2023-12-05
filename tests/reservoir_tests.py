@@ -26,7 +26,7 @@ def simple_2D_2f(i, j):
 
     model.set_ni(i)
     model.set_nj(j)
-    model.set_hk(30.)
+    model.set_hk(80.)
     model.set_hi(600.)
     model.set_hj(model.get_hi() * model.get_nj() / model.get_ni())
 
@@ -45,17 +45,18 @@ def simple_2D_2f(i, j):
 
     model.set_rw(4 * 2.54 / 100.)
     model.set_skin(0.)
-    model.set_pwf(330.)
+    model.set_pwf(278.36)
 
     model.set_rw_inj(4 * 2.54 / 100.)
     model.set_skin_inj(0.)
-    model.set_qwi(350.)
+    model.set_qwi(1000.)
 
     model.set_t_end(365.25 * 3.)
     model.set_max_dsw(0.005)
     model.set_max_dpr(5.)
     model.set_max_dt(10.)
     model.set_min_dt(0.1)
+    model.set_first_cell_dsw(0.05)
 
     # model.initialize()
     model.run_simulation(0.10)
