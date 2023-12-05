@@ -111,7 +111,6 @@ class Simple2D_OW:
     def set_t_end(self, value):
         self._t_end = value
 
-
     def get_ni(self):
         return self._ni
     def get_nj(self):
@@ -154,8 +153,8 @@ class Simple2D_OW:
 
     def get_max_dsw(self):
         return self._max_dsw
-    def get_max_dp(self):
-        return self._max_dp
+    def get_max_dpr(self):
+        return self._max_dpr
     def get_max_dt(self):
         return self._max_dt
     def get_min_dt(self):
