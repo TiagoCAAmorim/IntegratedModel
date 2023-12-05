@@ -6,7 +6,7 @@ debug_mode = True
 
 path = os.path.abspath(os.path.dirname(__file__))
 def save_plot(plot, name):
-    plot.savefig(path+'/plots/integration/'+name+'.png')
+    plot.savefig(path+'/plots/sim/'+name+'.png')
     plot.close()
 
 def simple_plot(x,y, x_label, y_label, title, file):
@@ -103,7 +103,7 @@ def set_reservoir(model):
     # model.set_pwf(330.)
     model.set_qwi(1000.)
 
-    model.set_t_end(50.)
+    model.set_t_end(5.)
     model.set_max_dsw(0.005)
     model.set_max_dpr(5.)
     model.set_max_dt(10.)
@@ -113,6 +113,7 @@ def set_reservoir(model):
 def test1():
     model = integrated_model.Integration(debug=False)
     model.set_file_name('results.txt')
+    model.set_out_folder(path+'/plots/integration/')
 
     set_pvt(model.pvt)
     set_reservoir(model.reservoir)

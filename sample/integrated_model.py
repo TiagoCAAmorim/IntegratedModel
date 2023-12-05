@@ -3,6 +3,7 @@ import pvt
 import flow
 import topside
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 class Integration:
 
@@ -52,6 +53,7 @@ class Integration:
         self._file_name = None
         self._file = None
         self._debug = debug
+        self._out_folder = None
 
     def _log(self, message):
         if self._debug:
@@ -69,9 +71,14 @@ class Integration:
         self._gas_loss = value
     def set_file_name(self, value):
         self._file_name = value
+    def set_out_folder(self, value):
+        self._out_folder = value
 
     def initialize(self):
-        self._file = open(self._file_name, 'w')
+        if self._out_folder is None:
+            self._file = open(self._file_name, 'w')
+        else:
+            self._file = open(self._out_folder + self._file_name, 'w')
         self.print_heading()
 
         self.pvt.set_t(self._reservoir_t)
@@ -170,13 +177,14 @@ class Integration:
             progress_bar.update(percentage_completion - progress_bar.n)
         progress_bar.close()
         self._file.close()
+        self.make_all_plots()
         print("End of simulation.")
 
     def solve_water_injection(self):
         self.water_pump.set_qw(self._qwi[-1])
         self.flow_inj.set_p_out(self._pwf_inj[-1])
         self.flow_inj.solve_in_flow()
-        self._pwh_inj = [self.flow_inj.get_p_in()[0]]
+        self._pwh_inj.append(self.flow_inj.get_p_in()[0])
         self._pump_power.append(self.water_pump.get_power_from_delta_p(self._pwh_inj[-1] - 1.))
         # self._log(f' Pwf_injw = {self._pwf_inj[-1]:0.2f}, Phead_injw = {self._pwh_inj[-1]:0.2f} bar, Power = {self._pump_power[-1]:0.2f} MW')
 
@@ -276,3 +284,37 @@ class Integration:
         s += f'\t{self._cumulative_emission[-1]/1000.:25.2f},'
         s += f'\t{self._emission_boe[-1]:25.2f}'
         self._file.write(s + '\n')
+
+    def _simple_plot(self, x, y, x_label, y_label, title, filename):
+        if self._out_folder is not None:
+            _ = plt.figure()
+            plt.plot(x, y)
+            plt.grid()
+            plt.xlabel(x_label)
+            plt.ylabel(y_label)
+            plt.title(title)
+            plt.savefig(self._out_folder + filename + '.png')
+            plt.close()
+
+    def make_all_plots(self):
+        self._simple_plot(self._t, self.reservoir.get_dt(), "Time [d]", "", "Time-step[d]", "TimeStep")
+        self._simple_plot(self._t, self._qo, "Time [d]", "", "Qo [m3/d]", "Qo")
+        self._simple_plot(self._t, self._qw, "Time [d]", "", "Qw [m3/d]", "Qw")
+        self._simple_plot(self._t, self._qg, "Time [d]", "", "Qg [m3/d]", "Qg")
+        self._simple_plot(self._t, self._qwi, "Time [d]", "", "Qwi [m3/d]", "Qwi")
+        self._simple_plot(self._t, self._pwf_prod, "Time [d]", "", "PwfProd [bar]", "PwfProd")
+        self._simple_plot(self._t, self._pwf_inj, "Time [d]", "", "PwfInj [bar]", "PwfInj")
+        self._simple_plot(self._t, self._pwh_prod, "Time [d]", "", "PwhProd [bar]", "PwhProd")
+        self._simple_plot(self._t, self._pwh_inj, "Time [d]", "", "PwhInj [bar]", "PwhInj")
+        self._simple_plot(self._t, self._qg_flare, "Time [d]", "", "QgFlare [m3/d]", "QgFlare")
+        self._simple_plot(self._t, self._qg_fuel, "Time [d]", "", "QgFuel [m3/d]", "QgFuel")
+        self._simple_plot(self._t, self._qg_export, "Time [d]", "", "QgExp [m3/d]", "QgExp")
+        self._simple_plot(self._t, self._pump_power, "Time [d]", "", "Pump [MW]", "Pump")
+        self._simple_plot(self._t, self._esp_power, "Time [d]", "", "ESP [MW]", "ESP")
+        self._simple_plot(self._t, self._export_power, "Time [d]", "", "ExpCompr [MW]", "ExpCompr")
+        self._simple_plot(self._t, self._total_power, "Time [d]", "", "TotalPower [MW]", "TotalPower")
+        self._simple_plot(self._t, [i/1000. for i in self._gas_emission], "Time [d]", "", "GasEmission [tonCO2/d]", "GasEmission")
+        self._simple_plot(self._t, [i/1000. for i in self._diesel_emission], "Time [d]", "", "DieselEmission [tonCO2/d]", "DieselEmission")
+        self._simple_plot(self._t, [i/1000. for i in self._total_emission], "Time [d]", "", "TotalEmission [tonCO2/d]", "TotalEmission")
+        self._simple_plot(self._t, [i/1000. for i in self._cumulative_emission], "Time [d]", "", "CumEmission [tonCO2]", "CumEmission")
+        self._simple_plot(self._t, self._emission_boe, "Time [d]", "", "RelEmission [kgCO2/boe]", "RelEmission")

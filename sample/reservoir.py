@@ -363,6 +363,12 @@ class Simple2D_OW:
     def get_t(self):
         return self._t_list
 
+    def get_dt(self):
+        dt = [self._t_list[i] - self._t_list[i - 1] for i in range(1, len(self._t_list))]
+        out = [0]
+        out.extend(dt)
+        return out
+
     def get_sw_cell(self,i , j):
         p = self.get_cell_number(i, j)
         sw = [x[2*p-1] for x in self._x_list]
