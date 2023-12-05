@@ -103,7 +103,7 @@ def set_reservoir(model):
     # model.set_pwf(330.)
     model.set_qwi(1000.)
 
-    model.set_t_end(5.)
+    model.set_t_end(300. * 5.)
     model.set_max_dsw(0.005)
     model.set_max_dpr(5.)
     model.set_max_dt(10.)
