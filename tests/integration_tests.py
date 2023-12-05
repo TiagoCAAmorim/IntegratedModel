@@ -1,5 +1,5 @@
 import os
-from context import integration
+from context import integrated_model
 import matplotlib.pyplot as plt
 
 debug_mode = True
@@ -103,14 +103,14 @@ def set_reservoir(model):
     # model.set_pwf(330.)
     model.set_qwi(1000.)
 
-    model.set_t_end(3. * 5.)
+    model.set_t_end(300. * 5.)
     model.set_max_dsw(0.005)
     model.set_max_dpr(5.)
     model.set_max_dt(10.)
     model.set_min_dt(0.1)
 
 def test1():
-    model = integration.Integration(debug=True)
+    model = integrated_model.Integration(debug=True)
     model.set_file_name('results.txt')
 
     set_pvt(model.pvt)
