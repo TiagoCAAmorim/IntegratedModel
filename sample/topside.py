@@ -44,7 +44,7 @@ class WaterPump:
         return head * qm * 9.81 / self._eff * 1E-6
 
     def get_power_from_delta_p(self, delta_p):
-        head = delta_p / (9.81 * 1000.)
+        head = delta_p * 1E5 / (9.81 * 1000.)
         return self.get_power_from_head(head)
 
 class GasCompressor:
@@ -85,17 +85,20 @@ class GasCompressor:
 class GasTurbine:
 
     def __init__(self):
-        self._rates = None
+        self._fuel = None
         self._power = None
-
-    def set_rates(self, values):
-        self._rates = np.array(list(values))
 
     def set_power(self, values):
         self._power = np.array(list(values))
 
+    def set_fuel(self, values):
+        self._fuel = np.array(list(values))
+
     def get_fuel(self, power_demand):
-        return np.interp(power_demand, self._power, self._rates)
+        return np.interp(power_demand, self._power, self._fuel)
+
+    def get_power(self, available_fuel):
+        return np.interp(available_fuel, self._fuel, self._power)
 
 class CO2_Emission:
 
@@ -104,7 +107,8 @@ class CO2_Emission:
         self._mw = {'co2':44., 'ch4':16., 'c2h6':30., 'c3h8':44., 'c4h10':58., 'n2':28., 'other':1e-20}
         self._c = {'co2':1., 'ch4':1., 'c2h6':2., 'c3h8':3., 'c4h10':4., 'n2':0., 'other':0.}
         self._emission = None
-        self.turbine = GasTurbine()
+        self.generator = GasTurbine()
+        self._diesel_power = 0.
 
     def set_mole_pc(self, component, value):
         if component in self._mole_pc.keys():
@@ -116,6 +120,11 @@ class CO2_Emission:
         self._mw['other'] = value
     def set_other_c(self, value):
         self._c['other'] = value
+
+    def set_diesel_power(self, value):
+        self._diesel_power = value
+    def get_diesel_power(self):
+        return self._diesel_power
 
     def get_relative_emission(self):
         return self._emission
@@ -136,6 +145,12 @@ class CO2_Emission:
         c_weigth_total = np.dot(weight_pc, c_weigth_pc)
         self._emission = mw_gas * c_weigth_total * 44. / 12. / 23.685
 
-    def get_emission(self, power_demand):
+    def get_gas_emission(self, power_demand):
         self.calculate_relative_emission()
-        return self._emission * self.turbine.get_fuel(power_demand)
+        return self._emission * self.generator.get_fuel(power_demand)
+
+    def get_diesel_emission(self):
+        return self._diesel_power * 1E3 * 24.*2.39/9.7
+
+    def get_emission(self, gas_power_demand):
+        return self._emission * self.generator.get_fuel(gas_power_demand) + self._diesel_power * 24.*2.39/9.7

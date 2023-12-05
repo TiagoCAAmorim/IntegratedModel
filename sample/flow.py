@@ -4,6 +4,126 @@ import ipr
 import common
 import reservoir
 
+class Esp:
+    def __init__(self, debug=False):
+        # self._g = 9.81 # m/s^2
+        self._eff = 1.
+        self._eff_coef = 200.
+        self._delta_p = 0.
+        self.pvt = pvt.PVT()
+        self._debug = debug
+        self._z_in = None
+        self._z_out = None
+        self._t_in = None
+        self._t_out = None
+        self._p_in = None
+        self._p_out = None
+        self._q_in = None
+        self._q_out = None
+        self._d = None
+
+    def set_eff(self,value):
+        self._eff = value
+    def set_eff_coef(self,value):
+        self._eff_coef = value
+    def set_delta_p(self,value):
+        self._delta_p = value
+
+    def get_eff(self):
+        return self._eff
+    def get_delta_p(self):
+        return self._delta_p
+
+    def set_z_in(self, value):
+        self._z_in = value
+        self._z_out = value
+    def set_z_out(self, value):
+        self.set_z_in(value)
+    def set_t_in(self, value):
+        self._t_in = value
+        self._t_out = value
+    def set_t_out(self, value):
+        self.set_t_in(value)
+    def set_p_in(self, value):
+        self._p_in = value
+    def set_p_out(self, value):
+        self._p_out = value
+    def set_q_in(self, value):
+        self._q_in = value
+        self._q_out = value
+    def set_q_out(self, value):
+        self.set_q_in(value)
+    def set_d(self, value):
+        pass
+
+    def get_z_in(self):
+        return [self._z_in]
+    def get_z_out(self):
+        return [self._z_out]
+    def get_t_in(self):
+        return [self._t_in]
+    def get_t_out(self):
+        return [self._t_out]
+    def get_p_in(self):
+        return [self._p_in]
+    def get_p_out(self):
+        return [self._p_out]
+    def get_q_in(self):
+        return [self._q_in]
+    def get_q_out(self):
+        return [self._q_out]
+
+    def get_h(self):
+        return [0.]
+    def get_p_bubble(self):
+        return [self.pvt.get_p_bubble()]
+    def get_rs(self):
+        return [self.pvt.get_rs()]
+    def get_gor(self):
+        return [self.pvt.get_gor()]
+    def get_u(self):
+        return [self.pvt.get_u()]
+    def get_b(self):
+        return [self.pvt.get_b()]
+    def get_rs(self):
+        return [self.pvt.get_rs()]
+    def get_re(self):
+        return [0.]
+    def get_f(self):
+        return [0.]
+    def get_v(self):
+        v = 4 * self.get_q_in()[0]/(24.*60.*60.) / (math.pi * self._d ** 2)
+        return [v]
+    def get_hl(self):
+        return [0.]
+
+    def solve_out_flow(self):
+        self.set_t_out(self.get_t_in()[0])
+        self.set_p_out(self.get_p_in()[0] + self.get_delta_p())
+
+        self.pvt.set_p((self.get_p_in()[0] + self.get_p_out()[0])/2.)
+        self.pvt.set_t(self.get_t_in()[0])
+        self.pvt.set_d(self._d)
+        self.pvt.set_q(self._q_in)
+        self.pvt.calculate_all_Standing()
+
+    def solve_in_flow(self):
+        self.set_t_in(self.get_t_out()[0])
+        self.set_p_in(self.get_p_out()[0] - self.get_delta_p())
+
+        self.pvt.set_p((self.get_p_in()[0] + self.get_p_out()[0])/2.)
+        self.pvt.set_t(self.get_t_in()[0])
+        self.pvt.set_d(self._d)
+        self.pvt.set_q(self._q_in)
+        self.pvt.calculate_all_Standing()
+
+    def get_true_eff(self):
+        return self.get_eff() * math.exp(1./self._eff_coef * (1 - self.pvt.get_u() / self.pvt.get_uw()))
+
+    def get_power(self):
+        eff = self.get_true_eff()
+        return self.get_delta_p()*1E5 * (self.get_q_in()[0]/(24.*60.*60.)) / eff * 1E-6
+
 class SubFlowElement:
 
     def __init__(self, element=None, debug=False):
@@ -283,13 +403,25 @@ class SubFlowElement:
 
     def calculate_Reynolds(self):
         self.calculate_uo(self._p, self._t)
+        self.calculate_rhoo(self._p, self._t)
+        self.pvt.set_q(self._m_rate / self.pvt.get_rho())
         self._re = 4 * self._m_rate / (self.pvt.get_u()/1000. * math.pi * self._d)
 
     def calculate_f(self):
+        f0 = 64 / self._re
         if self._re < 2300:
-            self._f = 64 / self._re
+            self._f = f0
         else:
-            self._f = 0.0055 * (1 + math.pow(2E4 * self._e / self._d + 1E6 / self._re, 1/3.))
+            sqrt_f = 1./math.sqrt(f0)
+            sqrt_f0 = 2. * sqrt_f
+            while (abs(sqrt_f - sqrt_f0)/sqrt_f > 0.001):
+                sqrt_f0 = sqrt_f
+                sqrt_f = 1.14 - 2.*math.log10(self._e / self._d + 9.35/self._re * sqrt_f0)
+            f = 1./math.pow(sqrt_f, 2)
+            if self._re > 4000:
+                self._f = f
+            else:
+                self._f = f0 + (f - f0) * (self._re - 2300.) / (4000. - 2300.)
 
     def calculate_head_loss(self):
         self._hl = self._f * self._h * self._v ** 2 / (self._d * 2 * self._g)
@@ -313,7 +445,7 @@ class SubFlowElement:
         htm = 0.  # not implemented yet
         dv2 = self.calculate_delta_v2_g()
         deltap = -1E-5 * self.pvt.get_rho() * self._g * (dz + hl + htm + dv2)
-        self._log(f'  dz = {dz:0.2f}, hl = {hl:0.2f}, dv2 = {dv2:0.2f}, deltap = {deltap:0.2f}, rho = {self.pvt.get_rho():0.2f}, u = {self.pvt.get_u():0.2f}')
+        self._log(f'  dz = {dz:0.2f}\thl = {hl:0.2f}\tdv2 = {dv2:0.2f}\tdeltap = {deltap:0.2f}\trho = {self.pvt.get_rho():0.2f}\tu = {self.pvt.get_u():0.2f}\tRe = {self.get_re():0.2f}')
         return deltap
 
     def calculate_p_in(self):
@@ -506,28 +638,28 @@ class FlowElement(SubFlowElement):
 
     def _print_flow_data_in(self, name, element):
         if isinstance(element.get_p_in(), list):
-            self._log(f'    {name}: p= {element._p_in:6.2f} bar, t= {element._t_in:6.2f} oC, q= {element._q_in:7.2f} m3/d')
+            self._log(f'    {name}: p= {element._p_in:6.2f} bar\tt= {element._t_in:6.2f} oC\tq= {element._q_in:7.2f} m3/d')
         else:
-            self._log(f'    {name}: p= {element.get_p_in():6.2f} bar, t= {element.get_t_in():6.2f} oC, q= {element.get_q_in():7.2f} m3/d')
+            self._log(f'    {name}: p= {element.get_p_in():6.2f} bar\tt= {element.get_t_in():6.2f} oC\tq= {element.get_q_in():7.2f} m3/d')
     def _print_flow_data_out(self, name, element):
         if isinstance(element.get_p_out(), list):
-            self._log(f'    {name}: p= {element._p_out:6.2f} bar, t= {element._t_out:6.2f} oC, q= {element._q_out:7.2f} m3/d')
+            self._log(f'    {name}: p= {element._p_out:6.2f} bar\tt= {element._t_out:6.2f} oC\tq= {element._q_out:7.2f} m3/d')
         else:
-            self._log(f'    {name}: p= {element.get_p_out():6.2f} bar, t= {element.get_t_out():6.2f} oC, q= {element.get_q_out():7.2f} m3/d')
+            self._log(f'    {name}: p= {element.get_p_out():6.2f} bar\tt= {element.get_t_out():6.2f} oC\tq= {element.get_q_out():7.2f} m3/d')
 
     def solve_out_flow(self):
         self._print_flow_data_in(name='Input data ', element=self)
         self._build_element_list()
         self._elements[0].solve_out_flow()
         prev_element = self._elements[0]
-        self._print_flow_data_out(name=f'Element {1:3d}', element=prev_element)
+        self._print_flow_data_out(name=f'Sub-element {1:3d}', element=prev_element)
         for i,element in enumerate(self._elements[1:]):
             element.set_p_in(prev_element.get_p_out())
             element.set_t_in(prev_element.get_t_out())
             element.set_q_in(prev_element.get_q_out())
             prev_element = element
             element.solve_out_flow()
-            self._print_flow_data_out(name=f'Element {i+2:3d}', element=prev_element)
+            self._print_flow_data_out(name=f'Sub-element {i+2:3d}', element=prev_element)
         self.set_p_out(self._elements[-1].get_p_out())
         self.set_t_out(self._elements[-1].get_t_out())
         self.set_q_out(self._elements[-1].get_q_out())
@@ -537,14 +669,14 @@ class FlowElement(SubFlowElement):
         self._build_element_list()
         self._elements[-1].solve_in_flow()
         prev_element = self._elements[-1]
-        self._print_flow_data_in(name=f'Element {self._n:3d}', element=prev_element)
+        self._print_flow_data_in(name=f'Sub-element {self._n:3d}', element=prev_element)
         for i,element in enumerate(self._elements[-2::-1]):
             element.set_p_out(prev_element.get_p_in())
             element.set_t_out(prev_element.get_t_in())
             element.set_q_out(prev_element.get_q_in())
             element.solve_in_flow()
             prev_element = element
-            self._print_flow_data_in(name=f'Element {self._n-i-1:3d}', element=prev_element)
+            self._print_flow_data_in(name=f'Sub-element {self._n-i-1:3d}', element=prev_element)
         self.set_p_in(self._elements[0].get_p_in())
         self.set_t_in(self._elements[0].get_t_in())
         self.set_q_in(self._elements[0].get_q_in())
@@ -573,6 +705,8 @@ class CompositeFlowElement:
         # self._qg_std = None
         # self._qw_std = None
 
+        self._esp_dp = 0.
+
         self._d = None
         self._e = None
 
@@ -595,6 +729,8 @@ class CompositeFlowElement:
             'q_in':['Inlet volumetric flow rate', 'm3/d'],
             'q_out':['Outlet volumetric flow rate', 'm3/d'],
             'q_std':['Volumetric flow rate in standard conditions', 'm3/d'],
+
+            'esp_dp':['ESP delta pressure', 'bar'],
 
             'd':['Internal diameter', 'm'],
             'e':['Rugosity', 'm'],
@@ -627,10 +763,15 @@ class CompositeFlowElement:
         self._q_std = q
     def set_d(self,d):
         self._d = d
+        self.pvt.set_d(d)
     def set_e(self,e):
         self._e = e
     def set_max_iter(self,i):
         self._max_iter = i
+    def set_esp_dp(self,value):
+        self._esp_dp = value
+    def get_esp_dp(self):
+        return self._esp_dp
 
     def set_dt(self,value):
         self._dt = value
@@ -641,12 +782,15 @@ class CompositeFlowElement:
         for element in self._elements:
             element.pvt = self.pvt.copy()
 
-    def add_element(self):
-        self._elements.append(FlowElement(self._debug))
-        self._elements[-1].pvt = self.pvt.copy()
-        self._elements[-1]._n = self._n
+    def add_element(self, is_esp=False):
+        if is_esp:
+            self._elements.append(Esp(self._debug))
+        else:
+            self._elements.append(FlowElement(self._debug))
+            self._elements[-1]._n = self._n
+            self._elements[-1]._e = self._e
         self._elements[-1]._d = self._d
-        self._elements[-1]._e = self._e
+        self._elements[-1].pvt = self.pvt.copy()
         if len(self._elements) > 1:
             self._elements[-1].set_z_in(self._elements[-2].get_z_out()[-1])
         else:
@@ -773,6 +917,33 @@ class CompositeFlowElement:
         self.set_t_in(self._elements[0].get_t_in()[0])
         self.set_q_in(self._elements[0].get_q_in()[0])
 
+    def set_esp_eff(self, value):
+        for element in self._elements:
+            if isinstance(element, Esp):
+                element.set_eff(value)
+
+    def set_esp_delta_p(self, value):
+        for element in self._elements:
+            if isinstance(element, Esp):
+                element.set_delta_p(value)
+
+    def set_esp_eff_coef(self, value):
+        for element in self._elements:
+            if isinstance(element, Esp):
+                element.set_eff_coef(value)
+
+    def get_esp_true_eff(self):
+        for element in self._elements:
+            if isinstance(element, Esp):
+                return element.get_true_eff()
+        return 0.
+
+    def get_esp_power(self):
+        for element in self._elements:
+            if isinstance(element, Esp):
+                return element.get_power()
+        return 0.
+
     def solve_reservoir(self, pwf):
         return self._reservoir.try_pwf(pwf, self._dt)
 
@@ -789,15 +960,15 @@ class CompositeFlowElement:
         return pwf - self.get_p_in()[0]
 
     def solve_operation_point(self, pwf_test=None):
-        self._log(f'Operation point search')
+        self._log('Operation point search')
         if pwf_test is None:
-            p0 = self.ipr._pr * 0.98
+            p0 = self.ipr.get_pr() * 0.98
         else:
             p0 = pwf_test
         f0 = self._pwf_error(p0)
         self._log(f' i=0, p={p0}, f={f0}')
         if pwf_test is None:
-            p1 = self.ipr._pr * 0.96
+            p1 = self.ipr.get_pr() * 0.96
         else:
             p1 = pwf_test * 0.95
         f1 = self._pwf_error(p1)
@@ -808,7 +979,7 @@ class CompositeFlowElement:
             p_best = p1
             f_best = abs(f1)
         i = 0
-        while i < self._max_iter:
+        while i < self._max_iter and (abs(f1 - f0) > 1E-12):
             p2 = p1 - f1 * (p1 - p0) / (f1 - f0)
             f2 = self._pwf_error(p2)
             self._log(f' i={i+2}, p={p2}, f={f2}')

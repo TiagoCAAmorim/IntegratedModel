@@ -22,11 +22,11 @@ def simple_2D_2f(i, j):
     model = reservoir.Simple2D_OW()
     model.set_p_init(340.)
     model.set_k(1000.)
-    model.set_phi(0.3)
+    model.set_phi(0.15)
 
     model.set_ni(i)
     model.set_nj(j)
-    model.set_hk(30.)
+    model.set_hk(80.)
     model.set_hi(600.)
     model.set_hj(model.get_hi() * model.get_nj() / model.get_ni())
 
@@ -45,14 +45,26 @@ def simple_2D_2f(i, j):
 
     model.set_rw(4 * 2.54 / 100.)
     model.set_skin(0.)
-    model.set_pwf(330.)
-    model.set_qwi(350.)
-    model.set_t_end(100.)
+    model.set_pwf(278.36)
+
+    model.set_rw_inj(4 * 2.54 / 100.)
+    model.set_skin_inj(0.)
+    model.set_qwi(1000.)
+
+    model.set_t_end(365.25 * 3.)
+    model.set_max_dsw(0.005)
+    model.set_max_dpr(5.)
+    model.set_max_dt(10.)
+    model.set_min_dt(0.1)
+    model.set_first_cell_dsw(0.05)
 
     # model.initialize()
     model.run_simulation(0.10)
 
     t = model.get_t()
+    dt = [t[i] - t[i - 1] for i in range(1, len(t))]
+    simple_plot(t[1:], dt, "t [d]", "delta t [d]", "Time-steps", "sim_dt")
+
     s1 = model.get_sw_cell(0,0)
     s2 = model.get_sw_cell(int(model.get_ni()/2),int(model.get_nj()/2))
     s3 = model.get_sw_cell(model.get_ni()-1,model.get_nj()-1)
@@ -112,9 +124,9 @@ def simple_2D_2f(i, j):
 
 
 if __name__ == "__main__":
-    for i in [3, 5, 7, 9, 10]: #, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]:
-        print(f'i = {i}, j = {1}')
-        simple_2D_2f(i,1)
+    for i in [5]: #[3, 5, 7, 9, 10]: #, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]:
+        # print(f'i = {i}, j = {1}')
+        # simple_2D_2f(i,1)
         print(f'i = {i}, j = {i}')
         simple_2D_2f(i,i)
     pass

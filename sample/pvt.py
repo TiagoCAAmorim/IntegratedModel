@@ -1,5 +1,6 @@
 import math
 import common
+import numpy as np
 
 class PVT:
 
@@ -45,6 +46,17 @@ class PVT:
         self._uw = 1.
         self._umix = None
 
+        self._emulsion = True
+        self._ronningsen_k = {
+            'shear_rate':np.array([30., 100., 500.]),
+            'shear_rate_log':np.log10([30., 100., 500.]),
+            'k1':np.array([0.01334, 0.0412, -0.06671]),
+            'k2':np.array([-0.003801, -0.002605, -0.000775]),
+            'k3':np.array([4.338, 3.841, 3.484]),
+            'k4':np.array([0.02698, 0.02497, 0.005])}
+        self._q = None
+        self._d = None
+
         self.variables = common.VariablesList({
             'wfr':['Water fraction', '-'],
             'api':['Oil API degree', 'oAPI'],
@@ -78,6 +90,8 @@ class PVT:
             'uo':['Oil viscosity', 'cp'],
             'uw':['Water viscosity', 'cp'],
             'umix':['Mixture viscosity', 'cp'],
+            'q':['Fluid rate', 'm3/s'],
+            'd':['Pipe diameter', 'm'],
             })
 
     def copy(self):
@@ -124,6 +138,9 @@ class PVT:
         pvt._uw = self._uw
         pvt._umix = self._umix
 
+        pvt._emulsion = self._emulsion
+        pvt._q = self._q
+        pvt._d = self._d
         return pvt
 
     def _check_value(self,value, min_value, max_value):
@@ -216,6 +233,12 @@ class PVT:
     def set_uo(self, u):
         self._check_value(u,1e-20,1e6)
         self._uo = u
+    def set_emulsion(self, use):
+        self._emulsion = use
+    def set_q(self, q):
+        self._q = q
+    def set_d(self, d):
+        self._d = d
 
     def reset_API(self):
         self._api = None
@@ -371,12 +394,41 @@ class PVT:
         return self._uo_do
     def get_uo(self):
         return self._uo
+    def get_uw(self):
+        return self._uw
+    def get_wfr(self):
+        return self._wfr
+
+    def get_wfr_crit(self):
+        if self._emulsion:
+            return max(0.15, 0.5-0.1108*math.log10(self.get_uo()/1.))
+        else:
+            return -1.
+
+    def get_u_emulsion(self):
+        if self._q is None or self._d is None:
+            print("######################################################################################")
+            print("### Could not calculate shear rate. Inform volumetric rate and/or diameter in PVT. ###")
+            print("######################################################################################")
+            self.set_emulsion(False)
+            return self.get_u()
+        shear_rate = 32. * self._q / (math.pi * math.pow(self._d, 3.))
+        k1 = np.interp(shear_rate, self._ronningsen_k['shear_rate'], self._ronningsen_k['k1'])
+        k2 = np.interp(shear_rate, self._ronningsen_k['shear_rate'], self._ronningsen_k['k2'])
+        k3 = np.interp(shear_rate, self._ronningsen_k['shear_rate'], self._ronningsen_k['k3'])
+        k4 = np.interp(shear_rate, self._ronningsen_k['shear_rate'], self._ronningsen_k['k4'])
+        ln_ur = k1 + k2 * self.get_t() + k3 * self.get_wfr() + k4 * self.get_t() * self.get_wfr()
+        return math.exp(max(0., ln_ur)) * self.get_uo()
+
     def get_u(self):
         if self._wfr == 1.:
             return self._uw
         if self._wfr == 0.:
             return self._uo
-        return (1-self._wfr) * self._uo + self._wfr * self._uw
+        if self._wfr < self.get_wfr_crit():
+            return self.get_u_emulsion()
+        else:
+            return (1-self._wfr) * self._uo + self._wfr * self._uw
 
     def _raise_error_variable(self, variable):
         raise NameError(f'{self.variables.get_description(variable)} not set.')
@@ -708,3 +760,12 @@ class PVT:
         A = math.pow(10, rs * (2.2E-7 * rs - 7.4E-4))
         b = 0.68 / math.pow(10, 8.62E-5 * rs) + 0.25 / math.pow(10, 1.1E-3 * rs) + 0.062 / math.pow(10, 3.74E-3 * rs)
         self._uo = A * math.pow(self._uo_do, b)
+
+    def calculate_all_Standing(self):
+        self.calculate_rs_Standing()
+        self.calculate_p_bubble_Standing()
+        self.calculate_co_bubble_Standing()
+        self.calculate_bo_bubble_Standing()
+        self.calculate_bo_Standing()
+        self.calculate_uo_do_Standing()
+        self.calculate_uo_Standing()

@@ -8,7 +8,7 @@ unit_conv = 0.00852702 # units: bar, mD, cP, m, m3/d
 
 class Simple2D_OW:
 
-    def __init__(self):
+    def __init__(self, debug=False):
         self._ni = None
         self._nj = None
         self._nk = 1
@@ -32,12 +32,17 @@ class Simple2D_OW:
         self._pwf = None
         self._wi = None
 
-        self._max_dsw = None
-        self._max_dp = None
-        self._max_dt = None
-        self._min_dt = None
-        self._t_end = None
+        self._rw_inj = None
+        self._skin_inj = 0.
+        self._wi_inj = None
 
+        self._max_dsw = None
+        self._max_dpr = None
+        self._max_dt = 1e10
+        self._min_dt = 0
+        self._t_end = None
+        self._converged_eq_system = True
+        self._first_cell_dsw = 0.
 
         self._di_mat = None
         self._dj_mat = None
@@ -54,6 +59,7 @@ class Simple2D_OW:
         self._a = None
         self._b = None
 
+        self._debug = debug
 
     def set_ni(self, value):
         self._ni = value
@@ -82,8 +88,6 @@ class Simple2D_OW:
     def set_uw(self, value):
         self._uw = value
 
-    def set_qwi(self, value):
-        self._qwi = value
     def set_rw(self, value):
         self._rw = value
     def set_skin(self, value):
@@ -91,10 +95,17 @@ class Simple2D_OW:
     def set_pwf(self, value):
         self._pwf = value
 
+    def set_qwi(self, value):
+        self._qwi = value
+    def set_rw_inj(self, value):
+        self._rw_inj = value
+    def set_skin_inj(self, value):
+        self._skin_inj = value
+
     def set_max_dsw(self, value):
         self._max_dsw = value
-    def set_max_dp(self, value):
-        self._max_dp = value
+    def set_max_dpr(self, value):
+        self._max_dpr = value
     def set_max_dt(self, value):
         self._max_dt = value
     def set_min_dt(self, value):
@@ -102,6 +113,8 @@ class Simple2D_OW:
     def set_t_end(self, value):
         self._t_end = value
 
+    def set_first_cell_dsw(self, value):
+        self._first_cell_dsw = value
 
     def get_ni(self):
         return self._ni
@@ -138,11 +151,15 @@ class Simple2D_OW:
         return self._skin
     def get_pwf(self):
         return self._pwf
+    def get_rw_inj(self):
+        return self._rw_inj
+    def get_skin_inj(self):
+        return self._skin_inj
 
     def get_max_dsw(self):
         return self._max_dsw
-    def get_max_dp(self):
-        return self._max_dp
+    def get_max_dpr(self):
+        return self._max_dpr
     def get_max_dt(self):
         return self._max_dt
     def get_min_dt(self):
@@ -162,6 +179,8 @@ class Simple2D_OW:
         self._pr_mat = np.full((self.get_ni(), self.get_nj()), self.get_p_init())
         self._sw_mat = np.full((self.get_ni(), self.get_nj()), self.kr.sat.get_swi())
 
+        self._sw_mat[0,0] += self._first_cell_dsw
+
         self._ncells = self.get_ni() * self.get_nj()
         self._nvars = 2 * self._ncells
 
@@ -169,6 +188,7 @@ class Simple2D_OW:
         a = self._dj_mat[-1,-1] / self._di_mat[-1,-1]
         ro = self._di_mat[-1,-1] * np.exp(-(a*np.pi - np.log(a))/(1. + a*a))
         self._wi = unit_conv * 2. * np.pi * self._k_mat[-1, -1] * self.get_hk() / (np.log(ro/self.get_rw()) + self.get_skin())
+        self._wi_inj = unit_conv * 2. * np.pi * self._k_mat[0, 0] * self.get_hk() / (np.log(ro/self.get_rw_inj()) + self.get_skin_inj())
 
         self._t_list = [0.]
         x = np.zeros(self._nvars)
@@ -285,7 +305,7 @@ class Simple2D_OW:
             f = self.build_f(dt)
             x =  np.linalg.solve(k,f)
 
-            if len(self._t_list) == 1:
+            # if len(self._t_list) == 1:
                 # folder = ''
                 # np.savetxt(f'{folder}x_prev_{self.get_ni()}_{self.get_nj()}.csv', self._x_list[-1], delimiter=',')
                 # np.savetxt(f'{folder}f_{self.get_ni()}_{self.get_nj()}.csv', f, delimiter=',')
@@ -294,10 +314,13 @@ class Simple2D_OW:
             # print(f'{n:2d}. error = {np.linalg.norm(x-x_last):0.3g}')
             if np.linalg.norm(x-x_last) < 0.01:
                 self._x_current = x
+                self._converged_eq_system = True
                 return
             n += 1
-        print(f" {self._t_list[-1]:0.2g} days: Flow simulation didn't converge after {n} iterations. ||error|| = {np.linalg.norm(x-x_last):0.3g}")
+        if self._debug:
+            print(f" {self._t_list[-1]:10.2f} days: Flow simulation didn't converge after {n} iterations. ||error|| = {np.linalg.norm(x-x_last):0.3g}")
         self._x_current = x
+        self._converged_eq_system = False
         return
 
     def try_pwf(self, pwf, dt):
@@ -320,27 +343,42 @@ class Simple2D_OW:
             dti = min(dt, self._t_end - self._t_list[-1])
             if not add_current_solution:
                 self.solve_next_dt(dti)
-            self._x_list.append(self._x_current)
-            t = min(self._t_list[-1] + dti, self._t_end)
-            self._t_list.append(t)
-            if add_current_solution:
-                return
-            percentage_completion = min(0.999, t / self._t_end) * 100
-            progress_bar.update(percentage_completion - progress_bar.n)
+            if add_current_solution or self.check_convergence(dti):
+                self._x_list.append(self._x_current)
+                t = min(self._t_list[-1] + dti, self._t_end)
+                self._t_list.append(t)
+                if add_current_solution:
+                    return
+                percentage_completion = min(0.999, t / self._t_end) * 100
+                progress_bar.update(percentage_completion - progress_bar.n)
+                dt = min(dt * 1.2, self._max_dt)
+            else:
+                dt = max(dti / 2., self._min_dt)
+                if self._debug:
+                    print(f" {self._t_list[-1]:10.2f} days: time-step cut. New dt = {dt:10.5f} days")
+
         progress_bar.close()
         print("End of simulation.")
 
     def get_t(self):
         return self._t_list
 
+    def get_dt(self):
+        dt = [self._t_list[i] - self._t_list[i - 1] for i in range(1, len(self._t_list))]
+        out = [0]
+        out.extend(dt)
+        return out
+
     def get_sw_cell(self,i , j):
         p = self.get_cell_number(i, j)
         sw = [x[2*p-1] for x in self._x_list]
+        sw = [float(sw) for sw in sw]
         return sw
 
     def get_pr_cell(self,i , j):
         p = self.get_cell_number(i, j)
         pr = [x[2*p-2] for x in self._x_list]
+        pr = [float(pr) for pr in pr]
         return pr
 
     def get_well_qo(self):
@@ -357,6 +395,11 @@ class Simple2D_OW:
         qw = [float(q) for q in qw]
         return qw
 
+    def get_inj_pwf(self):
+        sw = self.get_sw_cell(0, 0)[-1]
+        pr = self.get_pr_cell(0, 0)[-1]
+        return pr + self.get_qwi() * self.get_bw() * self.get_uw() / (self._wi_inj * self.kr.get_krw_2f(sw))
+
     def get_pr_map(self, t_index):
         x = self._x_list[t_index]
         return x[::2].flatten().reshape((self.get_ni(),self.get_nj()))
@@ -364,3 +407,28 @@ class Simple2D_OW:
     def get_sw_map(self, t_index):
         x = self._x_list[t_index]
         return x[1::2].flatten().reshape((self.get_ni(),self.get_nj()))
+
+    def check_convergence(self, dt = None):
+        if dt is not None:
+            if self._min_dt is not None:
+                if dt <= self._min_dt:
+                    return True
+
+        if not self._converged_eq_system:
+            return False
+
+        if self._max_dpr is not None:
+            last_pr = self._x_list[-1][::2].flatten()
+            curr_pr = self._x_current[::2].flatten()
+            max_dpr = np.max(np.abs(last_pr - curr_pr))
+            if max_dpr > self._max_dpr:
+                return False
+
+        if self._max_dsw is not None:
+            last_sw = self._x_list[-1][1::2].flatten()
+            curr_sw = self._x_current[1::2].flatten()
+            max_dsw = np.max(np.abs(last_sw - curr_sw))
+            if max_dsw > self._max_dsw:
+                return False
+
+        return True

@@ -251,6 +251,9 @@ def define_system_ex1(debug_mode):
     line.current_element.set_z_out(-1320.)
     line.current_element.set_number_divisions(2)
 
+    line.add_element(True) #ESP
+    line.current_element.set_delta_p(50.)
+
     line.add_element()
     line.current_element.set_h(500.)
     line.current_element.set_z_in(-1320.)
@@ -270,11 +273,15 @@ def system_ex1(wfr=0.0):
 
     line = define_system_ex1(debug_mode=debug_mode)
     line.pvt.set_wfr(wfr)
+    line.pvt.set_emulsion(True)
+    line.set_esp_eff(0.5)
     line.update_pvt()
     print('  Calculation from Inlet to Outlet')
     line.solve_out_flow()
     print(f'    Pressure in: {line.get_p_in()[0]:.3f} bar.')
     print(f'    Pressure out: {line.get_p_out()[-1]:.3f} bar.')
+    print(f'    ESP Power demand: {line.get_esp_power():.3f} MW')
+    print(f'    ESP Efficiency: {line.get_esp_true_eff()*100.:.2f}%')
 
     _ = plt.figure()
     plt.plot([0] + line.get_h_cumulative(), [line.get_p_in()[0]] + line.get_p_out())
@@ -287,6 +294,8 @@ def system_ex1(wfr=0.0):
     line.solve_in_flow()
     print(f'    Pressure in: {line.get_p_in()[0]:.3f} bar.')
     print(f'    Pressure out: {line.get_p_out()[-1]:.3f} bar.')
+    print(f'    ESP Power demand: {line.get_esp_power():.3f} MW')
+    print(f'    ESP Efficiency: {line.get_esp_true_eff()*100.:.2f}%')
 
     plt.plot([0] + line.get_h_cumulative(), line.get_p_in() + [line.get_p_out()[-1]])
 
@@ -299,6 +308,26 @@ def system_ex1(wfr=0.0):
     plt.ylabel('p [bar]')
     plt.title(f'System with 3 Elements: wfr = {wfr*100:0.0f}%')
     save_plot(plt,f'system1_{wfr*100:0.0f}pc')
+
+def system_ex1_emulsion():
+    print('System with 3 Elements - Example 1: Emulsion')
+
+    line = define_system_ex1(debug_mode=False)
+    line.pvt.set_emulsion(True)
+    line.update_pvt()
+    print('  Calculation from Inlet to Outlet')
+
+    n = 201
+    wfr_list = [i/(n-1) for i in range(n)]
+    phead = []
+    for wfr in wfr_list:
+        line.pvt.set_wfr(wfr)
+        line.update_pvt()
+        line.solve_out_flow()
+        phead.append(line.get_p_out()[-1])
+        print(f'  WCUT = {wfr*100.:.1f}%\tPhead = {phead[-1]:.3f} bar')
+
+    simple_plot(wfr_list, phead, 'Water Cut [-]', 'Head pressure [bar]', 'Sensibility to Emulsion', 'system1_emulsion')
 
 def system_ex1_vfp():
     print('System with 3 Elements - (q,p) plot')
@@ -371,7 +400,7 @@ def system_ex1_vfp():
     simple_plot(line.get_h_cumulative(), line.get_q_in(),
                 'Length [m]', 'Flow rate [m3/d]',
                 'System with 3 Elements', 'system1_q')
-    hl_m = [100*hl/h for (hl,h) in zip(line.get_hl(),line.get_h())]
+    hl_m = [100*hl/(h+1e-20) for (hl,h) in zip(line.get_hl(),line.get_h())]
     simple_plot(line.get_h_cumulative(), hl_m,
                 'Length [m]', 'Head loss / linear distance [m/100 m]',
                 'System with 3 Elements', 'system1_hl')
@@ -487,10 +516,12 @@ if __name__ == "__main__":
     # vertical_divided_test()
     # vertical_two_elements_test()
     # vertical_sensibility_test()
-    system_ex1()
-    system_ex1(0.5)
-    system_ex1(1.0)
+    # system_ex1(0.0)
+    # system_ex1(0.1)
+    system_ex1(0.2)
+    # system_ex1(0.3)
+    # system_ex1(0.4)
+    # system_ex1_emulsion()
     # system_ex1_vfp()
     # system_ex1_sensibility()
     # system_ex2()
-    pass
