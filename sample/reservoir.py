@@ -32,6 +32,10 @@ class Simple2D_OW:
         self._pwf = None
         self._wi = None
 
+        self._rw_inj = None
+        self._skin_inj = 0.
+        self._wi_inj = None
+
         self._max_dsw = None
         self._max_dp = None
         self._max_dt = None
@@ -82,14 +86,19 @@ class Simple2D_OW:
     def set_uw(self, value):
         self._uw = value
 
-    def set_qwi(self, value):
-        self._qwi = value
     def set_rw(self, value):
         self._rw = value
     def set_skin(self, value):
         self._skin = value
     def set_pwf(self, value):
         self._pwf = value
+
+    def set_qwi(self, value):
+        self._qwi = value
+    def set_rw_inj(self, value):
+        self._rw_inj = value
+    def set_skin_inj(self, value):
+        self._skin_inj = value
 
     def set_max_dsw(self, value):
         self._max_dsw = value
@@ -138,6 +147,10 @@ class Simple2D_OW:
         return self._skin
     def get_pwf(self):
         return self._pwf
+    def get_rw_inj(self):
+        return self._rw_inj
+    def get_skin_inj(self):
+        return self._skin_inj
 
     def get_max_dsw(self):
         return self._max_dsw
@@ -169,6 +182,7 @@ class Simple2D_OW:
         a = self._dj_mat[-1,-1] / self._di_mat[-1,-1]
         ro = self._di_mat[-1,-1] * np.exp(-(a*np.pi - np.log(a))/(1. + a*a))
         self._wi = unit_conv * 2. * np.pi * self._k_mat[-1, -1] * self.get_hk() / (np.log(ro/self.get_rw()) + self.get_skin())
+        self._wi_inj = unit_conv * 2. * np.pi * self._k_mat[0, 0] * self.get_hk() / (np.log(ro/self.get_rw_inj()) + self.get_skin_inj())
 
         self._t_list = [0.]
         x = np.zeros(self._nvars)
@@ -358,6 +372,11 @@ class Simple2D_OW:
         qw = [self._wi * self.kr.get_krw_2f(s) / (self.get_bw() * self.get_uw()) * (p - self.get_pwf()) for p,s in zip(pr, sw)]
         qw = [float(q) for q in qw]
         return qw
+
+    def get_inj_pwf(self):
+        sw = self.get_sw_cell(0, 0)[-1]
+        pr = self.get_pr_cell(0, 0)[-1]
+        return pr + self.get_qwi() * self.get_bw() * self.get_uw() / (self._wi_inj * self.kr.get_krw_2f(sw))
 
     def get_pr_map(self, t_index):
         x = self._x_list[t_index]

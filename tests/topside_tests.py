@@ -21,8 +21,8 @@ def sep_test():
     qo_max, qg_max = sep.calculate_max_rates()
 
     print('2-phase separator')
-    print(f'  Max oil rate = {qo_max} m3/d')
-    print(f'  Max gas rate = {qg_max} m3/d')
+    print(f'  Max oil rate = {qo_max:.1f} m3/d')
+    print(f'  Max gas rate = {qg_max:.1f} m3/d')
 
 def water_pump_test():
     pump = topside.WaterPump()
@@ -31,7 +31,7 @@ def water_pump_test():
 
     power = pump.get_power_from_head(2100.)
 
-    print(f'Water pump power demand = {power} MW')
+    print(f'Water pump power demand = {power:.3f} MW')
 
 def gas_comp_test():
     comp = topside.GasCompressor()
@@ -45,7 +45,7 @@ def gas_comp_test():
     comp.pvt.set_dg(0.876)
 
     power = comp.get_power()
-    print(f'Gas compressor power demand = {power} MW')
+    print(f'Gas compressor power demand = {power:.3f} MW')
 
 def co2_emission_test():
     emission = topside.CO2_Emission()
@@ -57,12 +57,13 @@ def co2_emission_test():
     emission.set_mole_pc('n2', 1.6)
 
     emission.calculate_relative_emission()
-    print(f'CO2 Emission = {emission.get_relative_emission()} kg/m3')
+    print(f'CO2 Emission = {emission.get_relative_emission():.3f} kg/m3')
 
-    emission.turbine.set_rates([0, 1,  1e6, 2.0e6, 2.1e6, 2.2e6, 2.3e6, 2.4e6, 2.5e6, 2.6e6, 2.7e6, 2.8e6, 2.9e6, 3.0e6, 5.0e6])
-    emission.turbine.set_power([0, 4.1, 4.1, 4.1, 4.1, 4.4, 4.8, 5.1, 5.4, 5.8, 6.1, 6.4, 6.8, 7.1, 14.2])
+    emission.generator.set_power([0, 0.1, 10, 20, 40, 100])
+    emission.generator.set_fuel([0, 65000, 75000, 126000, 250000, 750000])
 
-    print(f'Total emission = {emission.get_emission(5.) * 1e-3} ton-CO2')
+    demand = 20.
+    print(f'Total emission for {demand} MW = {emission.get_emission(demand) * 1e-3:.1f} ton-CO2/d')
 
 if __name__ == "__main__":
     sep_test()

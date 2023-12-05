@@ -46,7 +46,11 @@ def simple_2D_2f(i, j):
     model.set_rw(4 * 2.54 / 100.)
     model.set_skin(0.)
     model.set_pwf(330.)
+
+    model.set_rw_inj(4 * 2.54 / 100.)
+    model.set_skin_inj(0.)
     model.set_qwi(350.)
+
     model.set_t_end(100.)
 
     # model.initialize()
