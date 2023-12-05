@@ -8,7 +8,7 @@ unit_conv = 0.00852702 # units: bar, mD, cP, m, m3/d
 
 class Simple2D_OW:
 
-    def __init__(self):
+    def __init__(self, debug=False):
         self._ni = None
         self._nj = None
         self._nk = 1
@@ -42,6 +42,7 @@ class Simple2D_OW:
         self._min_dt = 0
         self._t_end = None
         self._converged_eq_system = True
+        self._first_cell_dsw = 0.
 
         self._di_mat = None
         self._dj_mat = None
@@ -58,6 +59,7 @@ class Simple2D_OW:
         self._a = None
         self._b = None
 
+        self._debug = debug
 
     def set_ni(self, value):
         self._ni = value
@@ -110,6 +112,9 @@ class Simple2D_OW:
         self._min_dt = value
     def set_t_end(self, value):
         self._t_end = value
+
+    def set_first_cell_dsw(self, value):
+        self._first_cell_dsw = value
 
     def get_ni(self):
         return self._ni
@@ -173,6 +178,8 @@ class Simple2D_OW:
         self._k_mat = np.full((self.get_ni(), self.get_nj()), self.get_k())
         self._pr_mat = np.full((self.get_ni(), self.get_nj()), self.get_p_init())
         self._sw_mat = np.full((self.get_ni(), self.get_nj()), self.kr.sat.get_swi())
+
+        self._sw_mat[0,0] += self._first_cell_dsw
 
         self._ncells = self.get_ni() * self.get_nj()
         self._nvars = 2 * self._ncells
@@ -310,7 +317,8 @@ class Simple2D_OW:
                 self._converged_eq_system = True
                 return
             n += 1
-        print(f" {self._t_list[-1]:10.2f} days: Flow simulation didn't converge after {n} iterations. ||error|| = {np.linalg.norm(x-x_last):0.3g}")
+        if self._debug:
+            print(f" {self._t_list[-1]:10.2f} days: Flow simulation didn't converge after {n} iterations. ||error|| = {np.linalg.norm(x-x_last):0.3g}")
         self._x_current = x
         self._converged_eq_system = False
         return
@@ -335,7 +343,7 @@ class Simple2D_OW:
             dti = min(dt, self._t_end - self._t_list[-1])
             if not add_current_solution:
                 self.solve_next_dt(dti)
-            if self.check_convergence(dti):
+            if add_current_solution or self.check_convergence(dti):
                 self._x_list.append(self._x_current)
                 t = min(self._t_list[-1] + dti, self._t_end)
                 self._t_list.append(t)
@@ -346,7 +354,8 @@ class Simple2D_OW:
                 dt = min(dt * 1.2, self._max_dt)
             else:
                 dt = max(dti / 2., self._min_dt)
-                print(f" {self._t_list[-1]:10.2f} days: time-step cut. New dt = {dt:10.5f} days")
+                if self._debug:
+                    print(f" {self._t_list[-1]:10.2f} days: time-step cut. New dt = {dt:10.5f} days")
 
         progress_bar.close()
         print("End of simulation.")

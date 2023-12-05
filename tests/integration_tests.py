@@ -103,14 +103,15 @@ def set_reservoir(model):
     # model.set_pwf(330.)
     model.set_qwi(1000.)
 
-    model.set_t_end(300. * 5.)
+    model.set_t_end(50.)
     model.set_max_dsw(0.005)
     model.set_max_dpr(5.)
     model.set_max_dt(10.)
     model.set_min_dt(0.1)
+    model.set_first_cell_dsw(0.05)
 
 def test1():
-    model = integrated_model.Integration(debug=True)
+    model = integrated_model.Integration(debug=False)
     model.set_file_name('results.txt')
 
     set_pvt(model.pvt)
