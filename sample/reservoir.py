@@ -37,11 +37,11 @@ class Simple2D_OW:
         self._wi_inj = None
 
         self._max_dsw = None
-        self._max_dp = None
-        self._max_dt = None
-        self._min_dt = None
+        self._max_dpr = None
+        self._max_dt = 1e10
+        self._min_dt = 0
         self._t_end = None
-
+        self._converged_eq_system = True
 
         self._di_mat = None
         self._dj_mat = None
@@ -102,8 +102,8 @@ class Simple2D_OW:
 
     def set_max_dsw(self, value):
         self._max_dsw = value
-    def set_max_dp(self, value):
-        self._max_dp = value
+    def set_max_dpr(self, value):
+        self._max_dpr = value
     def set_max_dt(self, value):
         self._max_dt = value
     def set_min_dt(self, value):
@@ -308,10 +308,12 @@ class Simple2D_OW:
             # print(f'{n:2d}. error = {np.linalg.norm(x-x_last):0.3g}')
             if np.linalg.norm(x-x_last) < 0.01:
                 self._x_current = x
+                self._converged_eq_system = True
                 return
             n += 1
         print(f" {self._t_list[-1]:10.2f} days: Flow simulation didn't converge after {n} iterations. ||error|| = {np.linalg.norm(x-x_last):0.3g}")
         self._x_current = x
+        self._converged_eq_system = False
         return
 
     def try_pwf(self, pwf, dt):
@@ -334,13 +336,19 @@ class Simple2D_OW:
             dti = min(dt, self._t_end - self._t_list[-1])
             if not add_current_solution:
                 self.solve_next_dt(dti)
-            self._x_list.append(self._x_current)
-            t = min(self._t_list[-1] + dti, self._t_end)
-            self._t_list.append(t)
-            if add_current_solution:
-                return
-            percentage_completion = min(0.999, t / self._t_end) * 100
-            progress_bar.update(percentage_completion - progress_bar.n)
+            if self.check_convergence(dti):
+                self._x_list.append(self._x_current)
+                t = min(self._t_list[-1] + dti, self._t_end)
+                self._t_list.append(t)
+                if add_current_solution:
+                    return
+                percentage_completion = min(0.999, t / self._t_end) * 100
+                progress_bar.update(percentage_completion - progress_bar.n)
+                dt = min(dt * 1.2, self._max_dt)
+            else:
+                dt = max(dti / 2., self._min_dt)
+                print(f" {self._t_list[-1]:10.2f} days: time-step cut. New dt = {dt:10.5f} days")
+
         progress_bar.close()
         print("End of simulation.")
 
@@ -385,3 +393,28 @@ class Simple2D_OW:
     def get_sw_map(self, t_index):
         x = self._x_list[t_index]
         return x[1::2].flatten().reshape((self.get_ni(),self.get_nj()))
+
+    def check_convergence(self, dt = None):
+        if dt is not None:
+            if self._min_dt is not None:
+                if dt <= self._min_dt:
+                    return True
+
+        if not self._converged_eq_system:
+            return False
+
+        if self._max_dpr is not None:
+            last_pr = self._x_list[-1][::2].flatten()
+            curr_pr = self._x_current[::2].flatten()
+            max_dpr = np.max(np.abs(last_pr - curr_pr))
+            if max_dpr > self._max_dpr:
+                return False
+
+        if self._max_dsw is not None:
+            last_sw = self._x_list[-1][1::2].flatten()
+            curr_sw = self._x_current[1::2].flatten()
+            max_dsw = np.max(np.abs(last_sw - curr_sw))
+            if max_dsw > self._max_dsw:
+                return False
+
+        return True
