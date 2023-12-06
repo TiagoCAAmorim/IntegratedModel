@@ -172,6 +172,7 @@ country={Brasil}}
 
 \begin{abstract}
 
+    A modelagem integrada aumenta o custo computacional de simulações de fluxo, mas o seu uso enriquece a gama de análises que podem ser realizadas. Este trabalho mostra que ao integrar um simples modelo de fluxo em meio poroso incompressível com um sistema de produção, foi possível realizar análises de emissão de $CO_2$.
 
 \end{abstract}
 
@@ -396,9 +397,15 @@ country={Brasil}}
 
         O termo de ganho de energia com turbomáquinas foi deliberadamente retirado porque foi criado um objeto específico para representar uma bomba elétrica submersível (\emph{ESP}). Não foram implementadas tabelas de eficiências de bomba. O objeto \emph{ESP} apenas recebe um valor de incremento de pressão e um valor de eficiência. O incremento de pressão é adicionado nos cálculos do fluxo vertical multifásico no ponto em que o usuário colocar a bomba. Um segundo comando realiza os cálculos da potência necessária para aplicar o incremento de pressão ao fluido em questão.
 
+        Para levar em conta a variação na viscosidade da mistura água+óleo na eficiência da bomba, foi assumida\footnote{Esta correlação foi assumida sem nenhuma base científica. Foi utilizada apenas para que a viscosidade da mistura tenha algum impacto na demanda energética da \emph{ESP}.} uma correlação exponencial do tipo:
+
+        \begin{align}
+            \eta_{ajustada} = \eta_{original} \exp \left[\frac{1}{\beta}\left(1-\frac{\mu}{\mu_o}\right) \right]
+        \end{align}
+
         O terceiro objeto implementado é uma coleção de trechos de tubulações. Desta forma é possível descrever uma tubulação e discretizá-la para fazer os cálculos de fluxo vertical multifásico.
 
-        O último objeto é uma coleção de tubulações e bombas. Neste elemento é possível descrever todo o conjunto de elementos que interligam o poço à unidade de produção: colunas, bombas, linhas, \emph{risers} (exemplo na Figura \ref{fig:flow}). É também neste objeto que é possível fazer o cálculo do ponto de operação de um poço, seja com uma IPR ou com um modelo de fluxo. É utilizado o Método da Secante para encontrar o ponto de operação.
+        O último objeto é uma coleção de tubulações e bombas. Neste elemento é possível descrever todo o conjunto de elementos que interligam o poço à unidade de produção: colunas, bombas, linhas, \emph{risers} (exemplo na Figura \ref{fig:flow}). É também neste objeto que é possível fazer o cálculo do ponto de operação de um poço, seja com uma IPR analítica ou com um modelo de fluxo. É utilizado o Método da Secante para encontrar o ponto de operação.
 
         \begin{figure}[hbt!]
             \begin{tikzpicture}
@@ -415,75 +422,113 @@ country={Brasil}}
             \label{fig:flow}
         \end{figure}
 
-    \subsection{Modelo de Reservatório Proposto}
+    \subsection{Equipamentos de Superfície}
 
-
-    \subsection{Modelo de Reservatório Proposto}
-        O modelo de reservatório é plano, com forma quadrada e mesmo refinamento em ambas direções ($\Delta i = \Delta j$). Existe um injetor de água em um dos cantos (célula [1,1]) e um produtor na diagonal oposta (célula [n,n]). As propriedades de rocha ($\phi$ e $k$) são constantes.
-
-        Em uma simulação \emph{Black-Oil} com água e óleo, a simulação de fluxo parte de um conjunto de valores de $p$ e $S_w$ no tempo inicial, para cada uma das células, e uma série de controles de produção ($q^{std}_p$). O simulador precisa resolver o conjunto de equações não lineares \ref{eq:blackoilumdw} e \ref{eq:blackoilumdo} a cada passo de tempo.
-
-        A implementação mais conhecida para resolver este conjunto de equações não lineares é o Método de Newton-Raphson. Para sistemas incompressíveis (onde $\phi$, $B$ e $\mu$ são constantes) este conjunto de equações é \emph{fracamente} não linear, e apenas os valores de $k_{ro}$ e $k_{rw}$ são função das variáveis de estado. O conjunto de equações resultantes pode ser resolvido adequadamente com o Método do Ponto Fixo. As equações são resolvidas como um conjunto de equações lineares de modo iterativo, isto é, utilizando o resultado de uma iteração como dado de entrada para resolver os termos $k_{ro}$ e $k_{rw}$ da próxima iteração, até que a convergência é atingida.
-
-        A proposta deste trabalho é avaliar a performance do Método de Eliminação de Gauss com Pivotamento Parcial com Escala. A partir de um código de fluxo em meio poroso bidimensional e incompressível foram gerados arquivos CSV com as matrizes de coeficientes e vetores de constantes para a resolução de uma iteração do Método do Ponto Fixo, para diferentes refinamentos de malha.
-
-        % Também foram exportados os resultados de cada uma das respostas destes sistemas de equações. No simulador de fluxo a resolução do sistema de equações foi feito com o pacote Numpy. Segundo a documentação do pacote, são utilizadas rotinas do LAPACK \cite{dongarra1992lapack}.
-
-\section{Implementação} \label{sec:implementacao}
-
-        Todo o código utilizado nesta análise foi desenvolvido em C++. A duas funções principais são:
+        Alguns dos equipamentos de superfície foram implementados no módulo \emph{topside.py}:
 
         \begin{description}
-            \item[readCSV] Função que recebe um \emph{string} com o camimnho de um arquivo CSV e faz a sua leitura. É assumido que é utilizado vírgula como separador. A função retorna uma matrix de \emph{double}.
-            \item[SolveGauss] Função que recebe uma matrix de \emph{double} e um vetor de \emph{double}, e resolve o sistema de equações lineares usando Eliminação de Gauss com Pivotamento Parcial. Existe a opção de realizar o pivotamento com e sem uso de escala.
+            \item[Separator] Faz o cálculo da máxima vazão de gás que um separador pode tratar. Também é feita uma estimativa da máxima vazão de óleo, mas sem considerações sobre o tempo de residência do líquido no separador.
+            \item[WaterPump] Implementa uma bomba de água de forma simplificada. Não foram implementadas tabelas de eficiência. O usuário precisa fornecer um valor de eficiência e o objeto retorna a demanda energética da bomba em função do incremento de pressão ou de \emph{head} necessário.
+            \item[GasCompressor] A demanda energética do compressor de gás é estimada a partir das condições de fluxo requeridas (pressão e temperatura), eficiência politrópica (informada diretamente pelo usuário) e razão de capacidade térmica do fluido ($\kappa$).
+            \item[GasTurbine] Implementa um interpolador. O usuário deve fornecer uma tabela de geração de energia ($MW$) em função da vazão de gás combustível ($m^3/d$). Uma função retorna vazão de gás combustível em função da demanda energética, e outra retorna geração de energia em função da vazão de gás combustível.
         \end{description}
 
-\section{Resultados}
+        Neste mesmo módulo foi implementado um objeto para fazer os cálculos de emissão de $CO_2$: \textbf{CO2\_Emission}. Neste objeto o usuário pode fornecer a composição do gás combustível e fazer o cálculo de emissão em função da demanda energética\cite{10.7122/151333-MS}.
 
-        Foram realizadas duas avaliações. A primeira foi da qualidade das respostas encontradas com o Método de Eliminação de Gauss. As respostas da implementação do Método de Eliminação de Gauss foram comparadas com as respostas do método de solução de sistema de equações lineares utilizado no simulador de fluxo em meio poroso (do pacote Numpy). Foram feitos testes com as duas variações do Método de Eliminação de Gauss: sem e com uso de escala.
+        Para o cálculo da demanda energética este objeto contém um \textbf{GasTurbine}, com o qual é possível calcular a quantidade de gás combustível necessário para atender a demanda. Nos casos em que não existe gás o suficiente para atender a demanda, é possível informar a quantidade de energia a ser atendida com geradores a diesel. A emissão de $CO_2$ associada à queima de diesel será adicionada à de queima de gás combustível no cálculo das emissões.
 
-        A medida da qualidade das respostas de cada método foi baseada no residual na forma $R = Ax-B$, onde $A$ é a matriz de coeficientes, $B$ é o vetor de constantes e $x$ é o vetor da solução do sistema linear $Ax=B$. Foram avaliadas duas normas do vetor residual: $L^2$ (\ref{eq:normadois}) e $L^\infty$ (\ref{eq:normainf}).
+    \subsection{Modelo Integrado}
 
-        \begin{align}
-            ||x||_2 &:= \sqrt{\sum_{i}x_i^2} \label{eq:normadois} \\
-            ||x||_\infty &:= \max_{i} |x_i| \label{eq:normainf}
-        \end{align}
+        O módulo \emph{integrated\_model.py} agrega todos os demais módulos descritos anteriormente. O usuário precisa definir:
 
-        As figuras \ref{fig:normaeledois} e \ref{fig:normaeleinf} comparam as normas dos residuais da solução dos sistemas de equações propostos com três métodos:
+        \begin{description}
+            \item[Modelo de fluido] Será copiado entre todos os elementos que utilizam dados de fluido. Desta forma existe uma melhor concordância entre os diferentes objetos utilizados.
+            \item[Modelo de reservatório] É inicializado com $Bo$ e $\mu_o$ na pressão e temperatura originais de reservatório. A evolução da simulação é controlada pelo modelo integrado.
+            \item[Linhas de produção] É preciso descrever todo o conjunto de tubulações que interligam o reservatório à unidade de produção no ponto de produção. O usuário deve fornecer uma pressão de chegada na unidade de produção e este objeto faz o cálculo do ponto de operação do produtor.
+            \item[Linhas de injeção] É preciso fornecer a descrição do conjunto de tubulações que interligam o reservatório à unidade de produção no ponto de injeção de água. O usuário deve fornecer uma vazão de injeção de água e a partir da pressão de fundo do simulador de fluxo é calculada a pressão necessária na superfície.
+            \item[Compressor de gás] A sua demanda energética será função da quantidade de gás disponível para ser exportado. Não há injeção de gás neste modelo.
+            \item[Bomba de água] A demanda energética da bomba de injeção de água será função da pressão de injeção necessária no ponto de interligação da linha de injeção com a unidade de produção.
+            \item[Turbina] É preciso informar a necessidade de gás combustível em função da demanda energética, para então poder fazer os cálculos de emissão de $CO_2$.
+        \end{description}
+
+        Como os elementos do sistema integrado foram implementados como objetos, o uso de uma formulação implícita para resolver todo o problema levaria a uma revisão do conceito de objetos. Dest forma, o acoplamento do reservatório com os equipamentos de produção foi feita de forma explícita. Dadas as limitações dos diferentes objetos implementados, o único cálculo que é feito iterativamente é o do ponto de operação do produtor. Todos os cálculos de balanço de gás e demanda energética é feita após a definição do ponto de operação.
+
+        O balanço de gás assume três destinos para o gás produzido: perdas (\emph{flare}), gás combustível e exportação. As perdas são estimadas como uma fração do gás produzido. A exportação de gás é o gás produzido menos perdas e gás combustível. O balanço é feito de forma incremental:
+
+        \begin{enumerate}
+            \item Assumir que todo os gás produzido, menos as perdas, é exportado (exportação majorada).
+            \item Calcular o consumo de gás combustível em função da demanda energética da bomba de injeção e água, da \emph{ESP} (se tiver) e do compressor de exportação (consumo de gás majorado).
+            \item Recalcular exportação em função do valor de gás combustível calculado.
+            \item Se a vazão de exportação for positiva, recalcular demanda energética do compressor de exportação, gás combustível e exportação de gás (assume que segunda iteração é suficiente).
+            \item Se a vazão de exportação for negativa, assumir que não há exportação e recalcular demanda de gás combustível.
+            \begin{enumerate}
+                \item Se o gás produzido, menos perdas, for suficiente para atender demanda de gás combustível, assumir que sobra de gás será queimada.
+                \item Se o gás produzido, menos perdas, não for suficiente para atender demanda de gás combustível, assumir que será utilizado um gerador a diesel para suprir a demanda que o gás disponível não consegue.
+            \end{enumerate}
+        \end{enumerate}
+
+    \section{Descrição do Problema}
+
+        O problema proposto é baseado nos Desafios 1, 2 e 5, mas não é exatamente nenhum deles.
+
+        O fluido é um óleo de $15^o API$, razão gás-óleo de $2\,m^3/m^3$ e gás com densidade relativa de $0.6$. É utilizado o modelo de emulsão para o cálculo de viscosidade nas tubulações de produção.
+
+        O modelo de reservatório é bidimensional, com $600\,m \times 600\,m \times 80\,m $, discretizado em cinco células nas direções $i$ e $j$. A permeabilidade é de $1000 mD$, e a porosidade de $15\%$. A saturação inicial é de $20\%$. A temperatura de reservatório é de $50^oC$, e a pressão inicial de $340\,bar$.
+
+        As curvas de permeabilidade relativa foram construídas com Corey (Figura \ref{fig:kr}).
+
+        \begin{figure}[hbt!]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {$Sw$},
+                    ylabel = {$Kr$},
+                    legend style={at={(0.60,0.85)}, anchor=east, font=\footnotesize},
+                    ]
+                    \addplot[color=blue, solid, thick] table [x=Sw, y=Krw] {corey_krw.txt};
+                    \addplot[color=green, solid, thick] table [x=Sw, y=Kro] {corey_kro.txt};
+                    \legend{Krw, Krow};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Curvas de permeabilidade relativa utilizadas.}
+            \label{fig:kr}
+        \end{figure}
+
+        Ambos poços tem diâmetro de $4\,pol$ e skin nulo. A vazão de injeção de água é de $1000\,m^3/d$. A pressão de cabeça do produtor é de $50\,bar$, e a temperatura de $50^oC$.
+
+        As linhas de produção e injeção tem a configuração da Figura \ref{fig:desenhoflow}, com $L_R = 1320\,m$, $L_{FL} = 500\,m$ e $L_w = 1600\,m$. O tubos tem $4\,pol$ de diâmetro e $0.6\,mm$ de rugosidade. A temperatura é constante e igual a $50^oC$. A única diferença entre as linhas é que a linha de produção tem uma \emph{ESP} no topo da coluna de produção. Foi assumido um incremento de pressão de $50\,bar$ na \emph{ESP}, uma eficiência de $60\%$ e um coeficiente de ajuste da eficiência de $200$.
+
+        \begin{figure}
+            \centering
+            \includegraphics[width=0.9\linewidth]{flow_problem.png}
+            \caption{Esquemático das linhas de produção e injeção do problema proposto.}
+            \label{fig:desenhoflow}
+        \end{figure}
+
+        A bomba de injeção de água tem eficiência de $75\%$. O compressor de exportação de gás tem eficiência politrópica de $76\%$, razão de capacidade térmica do fluido de $1.4$ e pressão de saída de $120\,bar$.
+
+        A perda de gás é de $2\%$ do gás produzido.
+
+        A simulação tem cinco anos de duração. O passo de tempo mínimo é de 0.1 dia e o máximo de 10 dias. O controle de passos de tempo limita a máxima variação da pressão a 5 bar, e de saturação de água a 0.5\%.
+
+    \section{Resultados}
+
+        Para facilitar a leitura, os gráficos foram concentrados no \ref{sec:figuras}.
+        Algumas conclusões podem ser tiradas do modelo integrado:
+
         \begin{itemize}
-            \item Eliminação de Gauss com Pivotamento Parcial
-            \item Eliminação de Gauss com Pivotamento Parcial com Escala
-            \item \emph{Rotinas do Numpy}\footnote{Este residual foi calculado com base nas respostas geradas com as rotinas de cálculo utilizadas no simulador de fluxo. Estes resultados fazem parte desta comparação para representar respostas de \emph{melhor qualidade}.}
+            \item As pressões de injeção de água estão muito altas. O modelo integrado precisa de controles adicionais para evitar este tipo de situação. Associado a isto é preciso implementar um modelo de reservatório compressível.
+            \item A produção de gás é muito baixa, e insuficiente para atender a demanda energética. A exportação de gás é nula e é preciso usar diesel para suprir o excedente da demanda. Para este projeto pode ser importante a busca por fontes alternativas de fornecimento de energia.
+            \item A maior demanda d energia vem da bomba de injeção de água. Um controle na potência da bomba de injeção de água ajudará a reduzir a demanda energética.
+            \item A \emph{ESP} tem impacto não desprezível na demanda energética. É preciso otimizar o seu uso e posição de instalação\footnote{Na verdade, neste modelo incompressível a \emph{ESP} não tem impacto na produção de óleo. A produção é função unicamente da vazão de injeção de água. Por esta razão uma sensibilidade não foi apresentada.}.
+            \item A curva de emissão de $CO_2$ por boe produzido mostra primeiro uma redução, associada à entrada de água no reservatório, reduzindo a demanda das bombas de injeção de água. Depois se apresenta um significativo incremento, resultado da chegada de água no produtor. Uma recuperação mais eficiente do óleo se traduz também em menores emissões.
         \end{itemize}
 
-        Observa-se que para o problema proposto de resolver sistemas de equações de um modelo de fluxo em meio poroso bidimensional, não há necessidade de usar escala no Método de Eliminação de Gauss. Uma segunda constatação é de que a qualidade das respostas geradas com o Método de Eliminação de Gauss é tão boa quanto a dos métodos numéricos implementados no Numpy, que seguramente são mais sofisticados que os métodos implementados para esta avaliação.
-
-        % \begin{figure}[hbt!]
-        %     \begin{tikzpicture}
-        %         \begin{semilogyaxis}[
-        %             grid=both,
-        %             xlabel = {Número de Parâmetros},
-        %             ylabel = {$||x||_2$},
-        %             legend style={at={(0.90,0.85)}, anchor=east, font=\footnotesize},
-        %             ]
-        %             \addplot[color=blue, solid, smooth, thick, mark=*] table [x=Parameters, y=NormR] {results_sens_table.txt};
-        %             \addplot[color=red, dashed, smooth, thick, mark=o] table [x=Parameters, y=NormRScl] {results_sens_table.txt};
-        %             \addplot[color=black, solid, smooth, thick, mark=*] table [x=Parameters, y=NormRTrue] {results_sens_table.txt};
-        %             \legend{Elim.Gauss, Elim.Gauss+Esc., \emph{Numpy}};
-        %         \end{semilogyaxis}
-        %     \end{tikzpicture}
-        %     \caption{Norma $L^2$ do residual das soluções de sistemas de equações lineares com diferentes métodos.}
-        %     \label{fig:normaeledois}
-        % \end{figure}
-
-
-
-
-        O código foi implementado em C++ e em um único arquivo. Pode ser encontrado em \href{https://github.com/TiagoCAAmorim/IntegratedModel/}{https://github.com/ TiagoCAAmorim/IntegratedModel/}.
+        O código foi implementado em Python e pode ser encontrado em \href{https://github.com/TiagoCAAmorim/IntegratedModel/}{https://github.com/TiagoCAAmorim/IntegratedModel/}.
 
     \section{Conclusão}
-
-        O Método de Eliminação de Gauss com Pivotamento Parcial com Escala gerou boas respostas para os sistemas de equações lineares testados. O residual das respostas do método implementado foram da mesma ordem de grandeza dos resultados alcançados com um pacote de computação científica popular. O Método de Eliminação de Gauss se mostrou computacionalmente lento, chegando a ser inviável para resolver sistemas de equações com um número maior de variáveis.
+        Foi implementado um conjunto de objetos que representam diferentes sistemas de um modelo integrado. O acoplamento realizado se mostrou suficiente para as análises pretendidas.
+        Os resultados mostraram que é preciso avaliar as decisões de projeto com vista não somente de recuperação de óleo, mas também em termos de emissões.
 
     % \label{}
 
@@ -496,6 +541,7 @@ country={Brasil}}
 
 \begin{description}
     \item[$^oAPI$:]Grau API do óleo.
+    \item[$\beta$:]Constante de ajuste da eficiência energética.
     \item[$Bp$:]Fator volume de formação da fase $p$ no reservatório ($m^3/m^3$).
     \item[$c_o$:]Compressibilidade do óleo ($1/bar$).
     \item[$D$:]Profundidade.
@@ -505,6 +551,7 @@ country={Brasil}}
     \item[$\Delta y$:]Discretização espacial na direção $j$.
     \item[$\Delta z$:]Discretização espacial na direção $k$.
     \item[$\Delta t$:]Discretização temporal.
+    \item[$\eta$:]Eficiência energética.
     \item[$\gamma_p$:]Peso específico da fase $p$ ($\gamma_p = \rho_p g$).
     \item[$\dot{\gamma}$:]Taxa de cisalhamento ($1/s$).
     \item[$k$:]Permeabilidade absoluta do meio poroso.
@@ -523,6 +570,146 @@ country={Brasil}}
     \item[$v_p$:]Velocidade da fase $p$.
     \item[$y_{cp}$:]Concentração do componente $c$ na fase $p$.
 \end{description}
+
+\section{Figuras dos Resultados} \label{sec:figuras}
+
+\begin{figure}[H]
+    \begin{tikzpicture}
+        \begin{axis}[
+            grid=both,
+            xlabel = {Tempo [$d$]},
+            ylabel = {Passo de Tempo [$d$]},
+            ]
+            \addplot[color=blue, solid, thick] table [x=Time_d, y=TimeStep_d] {results.txt};
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Passos de tempo.}
+    \label{fig:deltat}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{tikzpicture}
+        \begin{axis}[
+            grid=both,
+            xlabel = {Tempo [$d$]},
+            ylabel = {Vazão [$m^3/d$]},
+            legend style={at={(0.90,0.50)}, anchor=east, font=\footnotesize},
+            ]
+            \addplot[color=green, solid, thick] table [x=Time_d, y=Qo_m3/d] {results.txt};
+            \addplot[color=blue, solid, thick] table [x=Time_d, y=Qw_m3/d] {results.txt};
+            \addplot[color=black, solid, thick] table [x=Time_d, y=Qwi_m3/d] {results.txt};
+            \legend{Qo, Qw, Qwi};
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Vazão de óleo e água.}
+    \label{fig:vazao}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{tikzpicture}
+        \begin{axis}[
+            grid=both,
+            xlabel = {Tempo [$d$]},
+            ylabel = {Vazão [$m^3/d$]},
+            legend style={font=\footnotesize},
+            ]
+            \addplot[color=red, solid, thick] table [x=Time_d, y=Qg_m3/d] {results.txt};
+            \addplot[color=black, solid, thick] table [x=Time_d, y=QgFlare_m3/d] {results.txt};
+            \addplot[color=green, solid, thick] table [x=Time_d, y=QgFuel_m3/d] {results.txt};
+            \addplot[color=blue, solid, thick] table [x=Time_d, y=QgExp_m3/d] {results.txt};
+            \legend{Produção, \emph{Flare}, Combustível, Exportação};
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Gerenciamento do gás.}
+    \label{fig:gerenciamentogas}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{tikzpicture}
+        \begin{axis}[
+            grid=both,
+            xlabel = {Tempo [$d$]},
+            ylabel = {Pressão [$bar$]},
+            legend style={font=\footnotesize},
+            ]
+            \addplot[color=green, solid, thick] table [x=Time_d, y=PwfProd_bar] {results.txt};
+            \addplot[color=blue, solid, thick] table [x=Time_d, y=PwfInj_bar] {results.txt};
+            \addplot[color=green, dashed, thick] table [x=Time_d, y=PwhProd_bar] {results.txt};
+            \addplot[color=blue, dashed, thick] table [x=Time_d, y=PwhInj_bar] {results.txt};
+            \legend{$Pwf_{prod.}$, $Pwf_{inj.}$, $Pwh_{prod.}$, $Pwh_{inj.}$};
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Pressões de fundo e de cabeça dos poços.}
+    \label{fig:pressoespocos}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{tikzpicture}
+        \begin{axis}[
+            grid=both,
+            xlabel = {Tempo [$d$]},
+            ylabel = {Energia [$MW$]},
+            legend style={font=\footnotesize},
+            ]
+            \addplot[color=red, solid, thick] table [x=Time_d, y=Pump_MW] {results.txt};
+            \addplot[color=black, solid, thick] table [x=Time_d, y=ESP_MW] {results.txt};
+            \addplot[color=green, solid, thick] table [x=Time_d, y=ExpCompr_MW] {results.txt};
+            \addplot[color=blue, solid, thick] table [x=Time_d, y=TotalPower_MW] {results.txt};
+            \legend{Bomba de água, \emph{ESP}, Exportação, Total};
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Demanda energética.}
+    \label{fig:demandaenergia}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{tikzpicture}
+        \begin{axis}[
+            grid=both,
+            xlabel = {Tempo [$d$]},
+            ylabel = {Emissão [$ton-CO_2/d$]},
+            legend style={font=\footnotesize},
+            ]
+            \addplot[color=red, solid, thick] table [x=Time_d, y=GasEmission_tonCO2/d] {results.txt};
+            \addplot[color=blue, solid, thick] table [x=Time_d, y=DieselEmission_tonCO2/d] {results.txt};
+            \addplot[color=black, solid, thick] table [x=Time_d, y=TotalEmission_tonCO2/d] {results.txt};
+            \legend{Gás Combustível, Diesel, Total};
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Emissão de $CO_2$.}
+    \label{fig:emissao}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{tikzpicture}
+        \begin{axis}[
+            grid=both,
+            xlabel = {Tempo [$d$]},
+            ylabel = {Emissão [$ton-CO_2$]},
+            ]
+            \addplot[color=black, solid, thick] table [x=Time_d, y=CumEmission_tonCO2] {results.txt};
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Emissão de $CO_2$ acumulada.}
+    \label{fig:emissaocum}
+\end{figure}
+
+\begin{figure}[H]
+    \begin{tikzpicture}
+        \begin{axis}[
+            grid=both,
+            xlabel = {Tempo [$d$]},
+            ylabel = {Emissão [$kg-CO_2/boe$]},
+            ]
+            \addplot[color=black, solid, thick] table [x=Time_d, y=RelEmission_kgCO2/boe] {results.txt};
+        \end{axis}
+    \end{tikzpicture}
+    \caption{Emissão de $CO_2$ relativa.}
+    \label{fig:emissaorel}
+\end{figure}
+
+%
+%  	   RelEmission_kgCO2/boe
 
 %% \section{}
 %% \label{}
