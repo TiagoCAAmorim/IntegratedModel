@@ -18,3 +18,12 @@ class VariablesList:
     def get_unit(self, var):
         if var.lower() in self._variables.keys():
             return self._variables[var.lower()][1]
+
+def make_columns_file(list1, list2, column_name1, column_name2, file_name):
+    if len(list1) != len(list2):
+        print("Error: Lists must have the same length.")
+        return
+    with open(file_name, 'w') as file:
+        file.write(f"{column_name1}\t{column_name2}\n")
+        for val1, val2 in zip(list1, list2):
+            file.write(f"{val1}\t{val2}\n")
