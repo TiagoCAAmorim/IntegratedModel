@@ -1,5 +1,6 @@
 import os
 from context import relative_permeability as kr
+from context import common
 import matplotlib.pyplot as plt
 
 debug_mode = True
@@ -17,6 +18,9 @@ def simple_plot(x,y, x_label, y_label, title, file):
     plt.ylabel(y_label)
     plt.title(title)
     save_plot(plt,file)
+
+def save_data(x,y, x_label, y_label, file):
+    common.make_columns_file(x, y, x_label, y_label, path+'/plots/kr/'+file+'.txt')
 
 def kr_oil_water_corey():
     rel_perm = kr.Corey()
@@ -42,6 +46,9 @@ def kr_oil_water_corey():
         dkrw.append(rel_perm.get_dkrw_2f(sw))
         dkrow.append(rel_perm.get_dkrow_2f(sw))
 
+    save_data(sw_list, krw, 'Sw', 'Krw', 'corey_krw')
+    save_data(sw_list, krow, 'Sw', 'Kro', 'corey_kro')
+
     _ = plt.figure()
     plt.plot(sw_list, krw)
     plt.plot(sw_list, krow)
@@ -65,6 +72,7 @@ def kr_oil_water_corey():
     plt.ylabel('dKr')
     plt.title('Corey')
     save_plot(plt,'corey_prime')
+
 
 
 if __name__ == "__main__":
