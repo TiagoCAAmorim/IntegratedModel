@@ -1,5 +1,6 @@
 import os
 from context import flow
+from context import common
 import matplotlib.pyplot as plt
 
 debug_mode = True
@@ -17,6 +18,8 @@ def simple_plot(x,y, x_label, y_label, title, file):
     plt.ylabel(y_label)
     plt.title(title)
     save_plot(plt,file)
+
+    common.make_columns_file(x, y, x_label, y_label, path+'/plots/flow/'+file+'.txt')
 
 def define_common_parameters(line):
     line.pvt.set_api(15.)
@@ -249,7 +252,7 @@ def define_system_ex1(debug_mode):
     line.current_element.set_h(1600.)
     line.current_element.set_z_in(-1600. + -1320.)
     line.current_element.set_z_out(-1320.)
-    line.current_element.set_number_divisions(2)
+    line.current_element.set_number_divisions(5)
 
     line.add_element(True) #ESP
     line.current_element.set_delta_p(50.)
@@ -258,13 +261,13 @@ def define_system_ex1(debug_mode):
     line.current_element.set_h(500.)
     line.current_element.set_z_in(-1320.)
     line.current_element.set_z_out(-1320.)
-    line.current_element.set_number_divisions(1)
+    line.current_element.set_number_divisions(2)
 
     line.add_element()
     line.current_element.set_h(1320.)
     line.current_element.set_z_in(-1320.)
     line.current_element.set_z_out(0.)
-    line.current_element.set_number_divisions(2)
+    line.current_element.set_number_divisions(5)
 
     return line
 
@@ -308,6 +311,8 @@ def system_ex1(wfr=0.0):
     plt.ylabel('p [bar]')
     plt.title(f'System with 3 Elements: wfr = {wfr*100:0.0f}%')
     save_plot(plt,f'system1_{wfr*100:0.0f}pc')
+    filename = path+'/plots/flow/'+f'system1_{wfr*100:0.0f}pc'+'.txt'
+    common.make_columns_file([0] + line.get_h_cumulative(), line.get_p_in() + [line.get_p_out()[-1]], "Length_m", "Pressure_bar", filename)
 
 def system_ex1_emulsion():
     print('System with 3 Elements - Example 1: Emulsion')

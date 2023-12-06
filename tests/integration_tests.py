@@ -103,7 +103,7 @@ def set_reservoir(model):
     # model.set_pwf(330.)
     model.set_qwi(1000.)
 
-    model.set_t_end(300. * 5.)
+    model.set_t_end(365.25 * 5.)
     model.set_max_dsw(0.005)
     model.set_max_dpr(5.)
     model.set_max_dt(10.)
@@ -127,9 +127,6 @@ def test1():
     set_system_inj(model.flow_inj)
 
     model.water_pump.set_eff(0.75)
-
-    model.separator.set_ks(0.03)
-    model.separator.set_d(0.75)
 
     model.gas_compressor.set_eff(0.76)
     model.gas_compressor.set_k(1.4)

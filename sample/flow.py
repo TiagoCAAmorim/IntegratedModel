@@ -409,19 +409,19 @@ class SubFlowElement:
 
     def calculate_f(self):
         f0 = 64 / self._re
-        if self._re < 2300:
+        if self._re < 2100:
             self._f = f0
         else:
             sqrt_f = 1./math.sqrt(f0)
             sqrt_f0 = 2. * sqrt_f
             while (abs(sqrt_f - sqrt_f0)/sqrt_f > 0.001):
                 sqrt_f0 = sqrt_f
-                sqrt_f = 1.14 - 2.*math.log10(self._e / self._d + 9.35/self._re * sqrt_f0)
+                sqrt_f = -2.*math.log10(self._e / self._d / 3.7 + 2.51/self._re * sqrt_f0)
             f = 1./math.pow(sqrt_f, 2)
             if self._re > 4000:
                 self._f = f
             else:
-                self._f = f0 + (f - f0) * (self._re - 2300.) / (4000. - 2300.)
+                self._f = f0 + (f - f0) * (self._re - 2100.) / (4000. - 2100.)
 
     def calculate_head_loss(self):
         self._hl = self._f * self._h * self._v ** 2 / (self._d * 2 * self._g)

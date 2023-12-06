@@ -14,7 +14,6 @@ class Integration:
         self.flow_inj = flow.CompositeFlowElement(False)
         self.gas_compressor = topside.GasCompressor()
         self.water_pump = topside.WaterPump()
-        self.separator = topside.Separator()
         self.emission = topside.CO2_Emission()
 
         self._reservoir_t = None
