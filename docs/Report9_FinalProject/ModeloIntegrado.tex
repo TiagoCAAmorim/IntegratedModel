@@ -223,7 +223,7 @@ country={Brasil}}
             \item Viscosidade ($\mu_g$ e $\mu_o$).
         \end{itemize}
 
-        As propriedades são basicamente função da densidade do óleo ($^oAPI$), densidade do gás ($dg$), razão gás-óleo ($RGO$), pressão e temperatura. Outras grandezes auxiliares, necessárias nas estimativas das grandezas de interesse, são calculadas com correlações de Standing (eg.: compressibilidade do óleo).
+        As propriedades são basicamente função da densidade do óleo ($^oAPI$), densidade do gás ($dg$), razão gás-óleo ($RGO$), pressão e temperatura. Outras grandezas auxiliares, necessárias nas estimativas das grandezas de interesse, são calculadas com correlações de Standing (eg.: compressibilidade do óleo).
 
         As propriedades da água são assumidas constantes e são diretamente fornecidas pelo usuário.
 
@@ -244,7 +244,7 @@ country={Brasil}}
         \begin{table}[ht]
             \centering
             \begin{tabular}{c|ccc}
-                T.Cis. ($s^{-1}$) & 30 & 100 & 500 \\
+                $\dot{\gamma}$ [$s^{-1}$] & 30 & 100 & 500 \\
                  \hline
                  $k_1$ & 0.01334 & 0.0412 & -0.06671 \\
                  $k_2$ & -0.003801 & -0.002605 & -0.000775 \\
@@ -254,6 +254,8 @@ country={Brasil}}
             \caption{Coeficientes da correlação de Rønningsen.}
             \label{tab:ronningsen}
         \end{table}
+
+        Para taxas de cisalhamento diferentes das tabeladas, foi utilizada uma interpolação linear.
 
         Um pequeno ajuste foi realizado na formulação de Rønningsen. Para manter coerência com o cenário em que existe 100\% de óleo ($wcut=0$), o valor de $\eta_r$ é limitado à unidade (ver trecho reto para valores baixos de $wcut$ nas curvas da Figura \ref{fig:emulsao}).
 
@@ -270,7 +272,7 @@ country={Brasil}}
                     \legend{Óleo 1 cP, Óleo 10 cP};
                 \end{axis}
             \end{tikzpicture}
-            \caption{Estimativa de viscosidade de emulsão a 50 $^oC$.}
+            \caption{Estimativa de viscosidade de emulsão a 50 $^oC$ e $\dot{\gamma} = 100\,s^{-1}$.}
             \label{fig:emulsao}
         \end{figure}
 
@@ -291,7 +293,7 @@ country={Brasil}}
             &v_p = - \frac{k k_{rp}}{\mu_p} \left( \frac{\partial p_p}{\partial x} - \gamma_p \frac{\partial D}{\partial x} \right) = - \frac{k k_{rp}}{\mu_p} \left( \frac{\partial \Phi_p}{\partial x} \right)\label{eq:darcy}
         \end{align}
 
-        A maioria dos simuladores de fluxo comerciais utilizam diferenças finitas \cite{computer2022cmg}\cite{schlumberger2009technical}. Podemos acoplar as equações \ref{eq:consmassa} e \ref{eq:darcy}, e aplicar uma discretização no tempo ($\Delta t$) e no espaço ($\Delta x$) para um volume de controle ($V = \Delta x \Delta y \Delta z$)\footnote{Usualmente chamado de célula.}. A forma unidimensional desta equação discretizada é apresentada a seguir \ref{eq:geralumd}.
+        A maioria dos simuladores de fluxo comerciais utilizam diferenças finitas \cite{computer2022cmg}\cite{schlumberger2009technical}. Podemos acoplar as equações \ref{eq:consmassa} e \ref{eq:darcy}, e aplicar uma discretização no tempo ($\Delta t$) e no espaço ($\Delta x$) para um volume de controle ($V = \Delta x \Delta y \Delta z$)\footnote{Usualmente chamado de célula.}. A forma unidimensional desta equação discretizada é apresentada em \ref{eq:geralumd}.
 
         \begin{align}
             \sum_{p} & \left( \frac{\Delta y \Delta z}{\Delta x} y_{cp} \rho_p \frac{k k_{rp}}{\mu_p} \right)_{i+\tfrac{1}{2}} (\Phi_{p,i+1} - \Phi_{p,i})  \nonumber \\
@@ -303,7 +305,7 @@ country={Brasil}}
 
         As equações também se simplificam ao substituir as densidades ($\rho_p$) e concentrações de componentes ($y_{cp}$) pelo fator volume de formação da fase ($B$) e as relações volumétricas entre as fases e os componentes ($R$)\footnote{Maiores detalhes em \cite{dake1983fundamentals}.}.
 
-        Quando apenas água e óleo estão envolvidos na simulação, apenas duas equações de conservação de massa são necessárias. Como a soma das saturações é igual à unidade ($S_w + S_o = 1$) e negligenciando a tensão interfacial entre a água e o óleo ($p_o = p_w = p$), para cada célula é preciso resolver apenas duas variáveis: $p$ e $S_w$:
+        Quando apenas água e óleo estão envolvidos na simulação, duas equações de conservação de massa são necessárias. Como a soma das saturações é igual à unidade ($S_w + S_o = 1$) e negligenciando a tensão interfacial entre a água e o óleo ($p_o = p_w = p$), para cada célula é preciso resolver apenas as variáveis $p$ e $S_w$:
 
         \begin{align}
             &\left( \frac{\Delta y \Delta z}{\Delta x} \lambda_w \right)_{i+\tfrac{1}{2}} (p_{i+1} - p_{i} - \gamma_w \Delta D_{i+\tfrac{1}{2}})  \nonumber \\
@@ -331,7 +333,7 @@ country={Brasil}}
 
         Foi implementada a formulação implícita para resolver o problema de fluxo em meio poroso. A implementação mais conhecida para resolver este conjunto de equações não lineares é o Método de Newton-Raphson. Para sistemas incompressíveis (onde $\phi$, $B$ e $\mu$ são constantes) este conjunto de equações é \emph{fracamente} não linear, e apenas os valores de $k_{ro}$ e $k_{rw}$ são função das variáveis de estado. O conjunto de equações resultantes pode ser resolvido adequadamente com o Método do Ponto Fixo\cite{burden2016analise}. As equações são resolvidas como um conjunto de equações lineares de modo iterativo, isto é, utilizando o resultado de uma iteração como dado de entrada para resolver os termos $k_{ro}$ e $k_{rw}$ da próxima iteração, até que a convergência é atingida.
 
-        O controle do tamanho tamanho do passo de tempo de cada iteração é feito de forma simplificada. O usuário precisa fornecer valores de máxima variação de saturação de água e de pressão entre os passos de tempo. Quando algum dos limites não é observado, o passo de tempo é reduzido à metade e a simulação do tempo \emph{atual} é feita novamente. Caso as máximas variações sejam atendidas, o simulador irá incrementar o passo de tempo atual em 20\%. O usuário também pode informar valores mínimo e máximo dos passos de tempo.
+        O controle do tamanho tamanho do passo de tempo de cada iteração é feito de forma simplificada. O usuário precisa fornecer valores de máxima variação de saturação de água e de pressão entre os passos de tempo. Quando algum dos limites não é observado, o passo de tempo é reduzido à metade e a simulação do tempo \emph{atual} é feita novamente. Caso as máximas variações sejam atendidas, o simulador irá incrementar o passo de tempo para a próxima iteração em 20\%. O usuário também pode informar valores mínimo e máximo dos passos de tempo.
 
         Foi observado que este sistema incompressível tem dificuldades de convergência no primeiro passo de tempo da simulação. O problema está associado ao fato de que a célula em que o injetor de água está conectado tem saturação igual à saturação de água conata. Nesta situação a permeabilidade relativa da água é nula. Como o meio poroso é incompressível, nos primeiros passos de tempo é comum serem observados valores muito alto de pressão nesta célula e nas vizinhas. Este efeito é maior em modelos com células menores e altas vazões de injeção de água.
         Para evitar este efeito indesejado, foi implementada a opção de incrementar a saturação de água no tempo inicial desta célula. Esta alteração tem pouco impacto nos demais resultados, e evita valores de pressão anormais nos primeiros passos de tempo (Figura \ref{fig:ajustesw}).
@@ -371,7 +373,7 @@ country={Brasil}}
             p_a - p_b = \rho g \left( (z_a - z_b) + H_L + \frac{v^2_b - v^2_a}{2 g}\right)
         \end{align}
 
-        O termo de perda de carga por fricção ($H_L$) utiliza a formulação de Colebrook-White para cálculo do fator de fricção ($f$) quando o número de Reynolds ($Re$) é maior que 4000. Para evitar descontinuidades, nos casos em que o número de Reynolds fica entre o fluxo laminar ($Re \leq 2100$) e o fluxo turbulento ($Re \geq 4000$), é aplicada uma correlação linear entre os valores de $f$ calculados para fluxo laminar e turbulento.
+        O termo de perda de carga por fricção ($H_L$) utiliza a formulação de Colebrook-White para o cálculo do fator de fricção ($f$) quando o número de Reynolds ($Re$) é maior que 4000. Para evitar descontinuidades, nos casos em que o número de Reynolds fica entre o fluxo laminar ($Re \leq 2100$) e o fluxo turbulento ($Re \geq 4000$), é aplicada uma correlação linear entre os valores de $f$ calculados para fluxo laminar e turbulento (Figura \ref{fig:friccao}).
 
         \begin{figure}[hbt!]
             \begin{tikzpicture}
@@ -405,7 +407,7 @@ country={Brasil}}
 
         O terceiro objeto implementado é uma coleção de trechos de tubulações. Desta forma é possível descrever uma tubulação e discretizá-la para fazer os cálculos de fluxo vertical multifásico.
 
-        O último objeto é uma coleção de tubulações e bombas. Neste elemento é possível descrever todo o conjunto de elementos que interligam o poço à unidade de produção: colunas, bombas, linhas, \emph{risers} (exemplo na Figura \ref{fig:flow}). É também neste objeto que é possível fazer o cálculo do ponto de operação de um poço, seja com uma IPR analítica ou com um modelo de fluxo. É utilizado o Método da Secante para encontrar o ponto de operação.
+        O último objeto é uma coleção de tubulações e bombas. Neste objeto é possível descrever todo o conjunto de elementos que interligam o poço à unidade de produção: colunas, bombas, linhas, \emph{risers} (exemplo na Figura \ref{fig:flow}). É também neste objeto que é possível fazer o cálculo do ponto de operação de um poço, seja com uma IPR analítica ou com um modelo de fluxo. É utilizado o Método da Secante para encontrar o ponto de operação.
 
         \begin{figure}[hbt!]
             \begin{tikzpicture}
@@ -451,15 +453,15 @@ country={Brasil}}
             \item[Turbina] É preciso informar a necessidade de gás combustível em função da demanda energética, para então poder fazer os cálculos de emissão de $CO_2$.
         \end{description}
 
-        Como os elementos do sistema integrado foram implementados como objetos, o uso de uma formulação implícita para resolver todo o problema levaria a uma revisão do conceito de objetos. Dest forma, o acoplamento do reservatório com os equipamentos de produção foi feita de forma explícita. Dadas as limitações dos diferentes objetos implementados, o único cálculo que é feito iterativamente é o do ponto de operação do produtor. Todos os cálculos de balanço de gás e demanda energética é feita após a definição do ponto de operação.
+        Como os elementos do sistema integrado foram implementados como objetos, o uso de uma formulação implícita para resolver todo o problema levaria a uma revisão do conceito de objetos. Desta forma, o acoplamento do reservatório com os equipamentos de produção foi feita de forma explícita. Dadas as limitações dos diferentes objetos implementados, o único cálculo que é feito iterativamente é o do ponto de operação do produtor. Todos os cálculos de balanço de gás e demanda energética são feitos após a definição do ponto de operação.
 
         O balanço de gás assume três destinos para o gás produzido: perdas (\emph{flare}), gás combustível e exportação. As perdas são estimadas como uma fração do gás produzido. A exportação de gás é o gás produzido menos perdas e gás combustível. O balanço é feito de forma incremental:
 
         \begin{enumerate}
-            \item Assumir que todo os gás produzido, menos as perdas, é exportado (exportação majorada).
-            \item Calcular o consumo de gás combustível em função da demanda energética da bomba de injeção e água, da \emph{ESP} (se tiver) e do compressor de exportação (consumo de gás majorado).
+            \item Assumir que todo o gás produzido, menos as perdas, é exportado (exportação majorada).
+            \item Calcular o consumo de gás combustível em função da demanda energética da bomba de injeção de água, da \emph{ESP} (se tiver) e do compressor de exportação (consumo de gás majorado).
             \item Recalcular exportação em função do valor de gás combustível calculado.
-            \item Se a vazão de exportação for positiva, recalcular demanda energética do compressor de exportação, gás combustível e exportação de gás (assume que segunda iteração é suficiente).
+            \item Se a vazão de exportação for positiva, recalcular demanda energética do compressor de exportação, gás combustível e exportação de gás (assume que segunda iteração é suficiente para \emph{convergir}).
             \item Se a vazão de exportação for negativa, assumir que não há exportação e recalcular demanda de gás combustível.
             \begin{enumerate}
                 \item Se o gás produzido, menos perdas, for suficiente para atender demanda de gás combustível, assumir que sobra de gás será queimada.
@@ -473,7 +475,7 @@ country={Brasil}}
 
         O fluido é um óleo de $15^o API$, razão gás-óleo de $2\,m^3/m^3$ e gás com densidade relativa de $0.6$. É utilizado o modelo de emulsão para o cálculo de viscosidade nas tubulações de produção.
 
-        O modelo de reservatório é bidimensional, com $600\,m \times 600\,m \times 80\,m $, discretizado em cinco células nas direções $i$ e $j$. A permeabilidade é de $1000 mD$, e a porosidade de $15\%$. A saturação inicial é de $20\%$. A temperatura de reservatório é de $50^oC$, e a pressão inicial de $340\,bar$.
+        O modelo de reservatório é bidimensional, com $600\,m \times 600\,m \times 80\,m $, discretizado em cinco células nas direções $i$ e $j$. A permeabilidade é de $1000\,mD$, e a porosidade é de $15\%$. A saturação inicial é de $20\%$. A temperatura de reservatório é de $50^oC$, e a pressão inicial de $340\,bar$.
 
         As curvas de permeabilidade relativa foram construídas com Corey (Figura \ref{fig:kr}).
 
@@ -496,7 +498,7 @@ country={Brasil}}
 
         Ambos poços tem diâmetro de $4\,pol$ e skin nulo. A vazão de injeção de água é de $1000\,m^3/d$. A pressão de cabeça do produtor é de $50\,bar$, e a temperatura de $50^oC$.
 
-        As linhas de produção e injeção tem a configuração da Figura \ref{fig:desenhoflow}, com $L_R = 1320\,m$, $L_{FL} = 500\,m$ e $L_w = 1600\,m$. O tubos tem $4\,pol$ de diâmetro e $0.6\,mm$ de rugosidade. A temperatura é constante e igual a $50^oC$. A única diferença entre as linhas é que a linha de produção tem uma \emph{ESP} no topo da coluna de produção. Foi assumido um incremento de pressão de $50\,bar$ na \emph{ESP}, uma eficiência de $60\%$ e um coeficiente de ajuste da eficiência de $200$.
+        As linhas de produção e injeção tem a configuração da Figura \ref{fig:desenhoflow}, com $L_R = 1320\,m$, $L_{FL} = 500\,m$ e $L_w = 1600\,m$. O tubos tem $4\,pol$ de diâmetro e $0.6\,mm$ de rugosidade. A temperatura é constante e igual a $50^oC$. A única diferença entre as linhas é que a linha de produção tem uma \emph{ESP} no topo da coluna de produção (ponto 2 na Figura \ref{fig:desenhoflow}). Foi assumido um incremento de pressão de $50\,bar$ na \emph{ESP}, uma eficiência de $60\%$ e um coeficiente de ajuste da eficiência $\beta = 200$.
 
         \begin{figure}
             \centering
@@ -513,22 +515,22 @@ country={Brasil}}
 
     \section{Resultados}
 
-        Para facilitar a leitura, os gráficos foram concentrados no \ref{sec:figuras}.
+        Para facilitar a leitura, os gráficos com os resultados do problema proposto foram concentrados no \ref{sec:figuras}.
         Algumas conclusões podem ser tiradas do modelo integrado:
 
         \begin{itemize}
             \item As pressões de injeção de água estão muito altas. O modelo integrado precisa de controles adicionais para evitar este tipo de situação. Associado a isto é preciso implementar um modelo de reservatório compressível.
             \item A produção de gás é muito baixa, e insuficiente para atender a demanda energética. A exportação de gás é nula e é preciso usar diesel para suprir o excedente da demanda. Para este projeto pode ser importante a busca por fontes alternativas de fornecimento de energia.
-            \item A maior demanda d energia vem da bomba de injeção de água. Um controle na potência da bomba de injeção de água ajudará a reduzir a demanda energética.
+            \item A maior demanda de energia vem da bomba de injeção de água. Um controle na potência da bomba de injeção de água ajudará a reduzir a demanda energética.
             \item A \emph{ESP} tem impacto não desprezível na demanda energética. É preciso otimizar o seu uso e posição de instalação\footnote{Na verdade, neste modelo incompressível a \emph{ESP} não tem impacto na produção de óleo. A produção é função unicamente da vazão de injeção de água. Por esta razão uma sensibilidade não foi apresentada.}.
             \item A curva de emissão de $CO_2$ por boe produzido mostra primeiro uma redução, associada à entrada de água no reservatório, reduzindo a demanda das bombas de injeção de água. Depois se apresenta um significativo incremento, resultado da chegada de água no produtor. Uma recuperação mais eficiente do óleo se traduz também em menores emissões.
         \end{itemize}
 
-        O código foi implementado em Python e pode ser encontrado em \href{https://github.com/TiagoCAAmorim/IntegratedModel/}{https://github.com/TiagoCAAmorim/IntegratedModel/}.
+        O código foi implementado em Python e pode ser encontrado em \href{https://github.com/TiagoCAAmorim/IntegratedModel/}{https://github.com/TiagoCAAmorim/Integra tedModel/}.
 
     \section{Conclusão}
         Foi implementado um conjunto de objetos que representam diferentes sistemas de um modelo integrado. O acoplamento realizado se mostrou suficiente para as análises pretendidas.
-        Os resultados mostraram que é preciso avaliar as decisões de projeto com vista não somente de recuperação de óleo, mas também em termos de emissões.
+        Os resultados mostraram que é preciso avaliar as decisões de projeto com vista não somente na recuperação de óleo, mas também em termos de emissões.
 
     % \label{}
 
