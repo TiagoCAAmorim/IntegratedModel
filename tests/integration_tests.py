@@ -182,12 +182,6 @@ def test1():
     model.flow_prod.set_esp_delta_p(100.)
     model.run_simulation(0.5, False)
 
-    # model.set_file_name('results_esp200.0.txt')
-    # model.flow_prod.set_esp_delta_p(200.)
-    # model.run_simulation(0.5, False)
-
-    model.flow_prod.set_esp_delta_p(50.)
-
     model.set_file_name('results_d6_prod.txt')
     set_system_prod(model.flow_prod, 6.)
     model.flow_prod.set_esp_delta_p(50.)
@@ -218,7 +212,7 @@ def test1():
     model.run_simulation(0.5, False)
 
     model.emission.set_diesel_relative_emission(24.*2.39/9.7)
-    model.reservoir.set_t_end(10.)
+    model.reservoir.set_t_end(100.)
     model.pvt.set_check_values(False)
     for i in range(11):
         model.set_file_name(f'results_1stSw_{i}pc.txt')

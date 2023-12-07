@@ -336,7 +336,34 @@ country={Brasil}}
         O controle do tamanho tamanho do passo de tempo de cada iteração é feito de forma simplificada. O usuário precisa fornecer valores de máxima variação de saturação de água e de pressão entre os passos de tempo. Quando algum dos limites não é observado, o passo de tempo é reduzido à metade e a simulação do tempo \emph{atual} é feita novamente. Caso as máximas variações sejam atendidas, o simulador irá incrementar o passo de tempo para a próxima iteração em 20\%. O usuário também pode informar valores mínimo e máximo dos passos de tempo.
 
         Foi observado que este sistema incompressível tem dificuldades de convergência no primeiro passo de tempo da simulação. O problema está associado ao fato de que a célula em que o injetor de água está conectado tem saturação igual à saturação de água conata. Nesta situação a permeabilidade relativa da água é nula. Como o meio poroso é incompressível, nos primeiros passos de tempo é comum serem observados valores muito alto de pressão nesta célula e nas vizinhas. Este efeito é maior em modelos com células menores e altas vazões de injeção de água.
-        Para evitar este efeito indesejado, foi implementada a opção de incrementar a saturação de água no tempo inicial desta célula. Esta alteração tem pouco impacto nos demais resultados, e evita valores de pressão anormais nos primeiros passos de tempo (Figura \ref{fig:ajustesw}).
+        Para evitar este efeito indesejado, foi implementada a opção de incrementar a saturação de água no tempo inicial desta célula. Esta alteração tem pouco ou nenhum impacto nos demais resultados (Figura \ref{fig:ajusteswprod}), e evita valores de pressão anormais nos primeiros passos de tempo (Figura \ref{fig:ajustesw}). Para o problema proposto foi utilizado um valor de 5\%.
+
+        \begin{figure}[hbt!]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [d]},
+                    ylabel = {Pwf produtor [bar]},
+                    legend style={font=\footnotesize},
+                    % ymax=2100.,
+                    % ymin=900.,
+                    xmax=82.,
+                    xmin=-2.,
+                    ]
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_1stSw_0pc.txt};
+                    \addplot[color=blue, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_1stSw_1pc.txt};
+                    \addplot[color=red, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_1stSw_2pc.txt};
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_1stSw_3pc.txt};
+                    \addplot[color=gray, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_1stSw_4pc.txt};
+                    \addplot[color=yellow, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_1stSw_5pc.txt};
+                    \addplot[color=purple, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_1stSw_6pc.txt};
+                    \addplot[color=cyan, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_1stSw_7pc.txt};
+                    \legend{$\Delta S_w=0\%$,$\Delta S_w=2\%$,$\Delta S_w=2\%$,$\Delta S_w=3\%$,$\Delta S_w=4\%$,$\Delta S_w=5\%$,$\Delta S_w=6\%$,$\Delta S_w=7\%$};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Efeito na pressão de fundo do produtor de modificar a saturação inicial de água da célula do injetor de água.}
+            \label{fig:ajusteswprod}
+        \end{figure}
 
         \begin{figure}[hbt!]
             \begin{tikzpicture}
@@ -344,22 +371,24 @@ country={Brasil}}
                     grid=both,
                     xlabel = {Tempo [d]},
                     ylabel = {Pwf injetor [bar]},
-                    legend style={at={(0.90,0.75)}, anchor=east, font=\footnotesize},
+                    legend style={font=\footnotesize},
                     ymax=2100.,
                     ymin=900.,
-                    xmax=42.,
+                    xmax=82.,
                     xmin=-2.,
                     ]
-                    \addplot[color=black, solid, thick] table [x=Time, y=PwfInj] {SensPwfInjW_0.txt};
-                    \addplot[color=blue, solid, thick] table [x=Time, y=PwfInj] {SensPwfInjW_1.txt};
-                    \addplot[color=red, solid, thick] table [x=Time, y=PwfInj] {SensPwfInjW_2.txt};
-                    \addplot[color=green, solid, thick] table [x=Time, y=PwfInj] {SensPwfInjW_3.txt};
-                    \addplot[color=yellow, solid, thick] table [x=Time, y=PwfInj] {SensPwfInjW_4.txt};
-                    \addplot[color=gray, solid, thick] table [x=Time, y=PwfInj] {SensPwfInjW_5.txt};
-                    \legend{$\Delta S_w=0\%$,$\Delta S_w=2\%$,$\Delta S_w=2\%$,$\Delta S_w=3\%$,$\Delta S_w=4\%$,$\Delta S_w=5\%$};
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=PwfInj_bar] {results_1stSw_0pc.txt};
+                    \addplot[color=blue, solid, thick] table [x=Time_d, y=PwfInj_bar] {results_1stSw_1pc.txt};
+                    \addplot[color=red, solid, thick] table [x=Time_d, y=PwfInj_bar] {results_1stSw_2pc.txt};
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=PwfInj_bar] {results_1stSw_3pc.txt};
+                    \addplot[color=gray, solid, thick] table [x=Time_d, y=PwfInj_bar] {results_1stSw_4pc.txt};
+                    \addplot[color=yellow, solid, thick] table [x=Time_d, y=PwfInj_bar] {results_1stSw_5pc.txt};
+                    \addplot[color=purple, solid, thick] table [x=Time_d, y=PwfInj_bar] {results_1stSw_6pc.txt};
+                    \addplot[color=cyan, solid, thick] table [x=Time_d, y=PwfInj_bar] {results_1stSw_7pc.txt};
+                    \legend{$\Delta S_w=0\%$,$\Delta S_w=2\%$,$\Delta S_w=2\%$,$\Delta S_w=3\%$,$\Delta S_w=4\%$,$\Delta S_w=5\%$,$\Delta S_w=6\%$,$\Delta S_w=7\%$};
                 \end{axis}
             \end{tikzpicture}
-            \caption{Efeito de modificar a saturação inicial de água da célula do injetor de água para um mesmo modelo.}
+            \caption{Efeito na pressão de fundo do injetor de modificar a saturação inicial de água da célula do injetor de água.}
             \label{fig:ajustesw}
         \end{figure}
 
@@ -515,16 +544,116 @@ country={Brasil}}
 
     \section{Resultados}
 
-        Para facilitar a leitura, os gráficos com os resultados do problema proposto foram concentrados no \ref{sec:figuras}.
-        Algumas conclusões podem ser tiradas do modelo integrado:
+        Algumas conclusões podem ser tiradas dos resultados do modelo integrado proposto:
 
         \begin{itemize}
-            \item As pressões de injeção de água estão muito altas. O modelo integrado precisa de controles adicionais para evitar este tipo de situação. Associado a isto é preciso implementar um modelo de reservatório compressível.
-            \item A produção de gás é muito baixa, e insuficiente para atender a demanda energética. A exportação de gás é nula e é preciso usar diesel para suprir o excedente da demanda. Para este projeto pode ser importante a busca por fontes alternativas de fornecimento de energia.
-            \item A maior demanda de energia vem da bomba de injeção de água. Um controle na potência da bomba de injeção de água ajudará a reduzir a demanda energética.
-            \item A \emph{ESP} tem impacto não desprezível na demanda energética. É preciso otimizar o seu uso e posição de instalação\footnote{Na verdade, neste modelo incompressível a \emph{ESP} não tem impacto na produção de óleo. A produção é função unicamente da vazão de injeção de água. Por esta razão uma sensibilidade não foi apresentada.}.
-            \item A curva de emissão de $CO_2$ por boe produzido mostra primeiro uma redução, associada à entrada de água no reservatório, reduzindo a demanda das bombas de injeção de água. Depois se apresenta um significativo incremento, resultado da chegada de água no produtor. Uma recuperação mais eficiente do óleo se traduz também em menores emissões.
+            \item As pressões de injeção de água estão muito altas (Figura \ref{fig:pressoespocos}). O modelo integrado precisa de controles adicionais para evitar este tipo de situação. Associado a isto é preciso implementar um modelo de reservatório compressível.
+            \item A maior demanda de energia vem da bomba de injeção de água (Figura \ref{fig:demandaenergia}). Um controle na potência da bomba de injeção de água ajudará a reduzir a demanda energética.
+            \item A \emph{ESP} tem impacto não desprezível na demanda energética. É preciso otimizar o seu uso e posição de instalação.
+            \item A produção de gás é muito baixa, e insuficiente para atender a demanda energética. A exportação de gás é nula e é preciso usar diesel para suprir o excedente da demanda (Figura \ref{fig:emissao}). Para este projeto pode ser importante a busca por fontes alternativas de fornecimento de energia.
+            \item A curva de emissão de $CO_2$ por boe produzido (Figura \ref{fig:emissaorel}) mostra primeiro uma redução, associada à entrada de água no reservatório, reduzindo a demanda das bombas de injeção de água. Depois se apresenta um significativo incremento, resultado da chegada de água no produtor. Uma recuperação mais eficiente do óleo se traduz também em menores emissões.
         \end{itemize}
+
+        Gráficos de todos os resultados gerados na solução do problema proposto foram concentrados no \ref{sec:figuras}.
+
+        Em face dos resultados do modelo proposto, foram feitas diferentes sensibilidades com o modelo integrado.
+
+        Foi avaliado o efeito do uso da \emph{ESP}. Observa-se que neste modelo a \emph{ESP} tem efeito negativo na emissão de $CO_2$ (Figura \ref{fig:emissaorelesp}). Na verdade, neste modelo incompressível a \emph{ESP} não tem impacto na produção de óleo. A produção é função unicamente da vazão de injeção de água. Ao usar a \emph{ESP} o efeito é de reduzir a pressão de fundo no produtor, que reduz a pressão de fundo no injetor e que, por último, reduz a demanda de energia na bomba de água (Figura \ref{fig:pwhinjsens}). Como foi assumida uma eficiência menor na \emph{ESP} que na bomba de água, as emissões sobem com o maior uso da \emph{ESP}.
+
+        \begin{figure}[hbt!]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {Emissão [$kgCO_2/boe$]},
+                    legend style={at={(0.65,0.82)}, anchor=east, font=\footnotesize},
+                    ]
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=RelEmission_kgCO2/boe] {results_esp0.0.txt};
+                    \addplot[color=red, solid, thick] table [x=Time_d, y=RelEmission_kgCO2/boe] {results_main.txt};
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=RelEmission_kgCO2/boe] {results_esp100.0.txt};
+                    \legend{$\Delta P = 0\,bar$,$\Delta P = 50\,bar$,$\Delta P = 100\,bar$};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Emissão de $CO_2$ relativa em função do incremento de pressão da \emph{ESP}.}
+            \label{fig:emissaorelesp}
+        \end{figure}
+
+        \begin{figure}[hbt!]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {$Pwh_{inj.}\,[bar]$},
+                    legend style={font=\footnotesize},
+                    ]
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=PwhInj_bar] {results_esp0.0.txt};
+                    \addplot[color=red, solid, thick] table [x=Time_d, y=PwhInj_bar] {results_main.txt};
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=PwhInj_bar] {results_esp100.0.txt};
+                    \legend{$\Delta P = 0\,bar$,$\Delta P = 50\,bar$,$\Delta P = 100\,bar$};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Emissão de $CO_2$ relativa em função do incremento de pressão da \emph{ESP}.}
+            \label{fig:pwhinjsens}
+        \end{figure}
+
+        Teste com variação no diâmetro dos poços.
+
+        \begin{figure}[hbt!]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {$Pwh_{inj.}\,[bar]$},
+                    legend style={at={(0.65,0.82)}, anchor=east, font=\footnotesize},
+                    ]
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=PwhInj_bar] {results_main.txt};
+                    \addplot[color=red, solid, thick] table [x=Time_d, y=PwhInj_bar] {results_d6_prod.txt};
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=PwhInj_bar] {results_d6_inj.txt};
+                    \legend{Ambos=$4\,pol$, Prod.=$6\,pol$, Inj.=$6\,pol$};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{ relativa em função do incremento de pressão da \emph{ESP}.}
+            % \label{fig:pwhinjsens}
+        \end{figure}
+
+        \begin{figure}[hbt!]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {$Pwh_{inj.}\,[bar]$},
+                    legend style={at={(0.65,0.82)}, anchor=east, font=\footnotesize},
+                    ]
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_main.txt};
+                    \addplot[color=red, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_d6_prod.txt};
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_d6_inj.txt};
+                    \legend{Ambos=$4\,pol$, Prod.=$6\,pol$, Inj.=$6\,pol$};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{ relativa em função do incremento de pressão da \emph{ESP}.}
+            % \label{fig:pwhinjsens}
+        \end{figure}
+
+        Em face do impacto do uso de diesel para gerar a energia que o gás disponível não consegue atender, foi avaliado o impacto de usar outras fontes de energia. Uma opção é o uso de diesel verde. Uma página do Departamento de Energia dos Estados Unidos\cite{USDepEnergy} cita dois estudos que apontam para reduções entre 5 e 65\% na quantidade de $CO_2$ emitido pela queima de diesel. Também foi avaliado o impacto do uso de energia de fontes renováveis. Assumiu-se emissões nulas ao usar energia eólica. Observa-se que o impacto nas emissões é significativo (Figura \ref{fig:emissaorelsens}).
+
+        \begin{figure}[hbt!]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {Emissão [$kgCO_2/boe$]},
+                    legend style={at={(0.65,0.82)}, anchor=east, font=\footnotesize},
+                    ]
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=RelEmission_kgCO2/boe] {results_main.txt};
+                    \addplot[color=red, solid, thick] table [x=Time_d, y=RelEmission_kgCO2/boe] {results_green_diesel_2.txt};
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=RelEmission_kgCO2/boe] {results_green_diesel_1.txt};
+                    \addplot[color=blue, solid, thick] table [x=Time_d, y=RelEmission_kgCO2/boe] {results_windfarm.txt};
+                    \legend{Diesel, Diesel verde (-5\% $CO_2$), Diesel verde (-65\% $CO_2$), Energia eólica};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Emissão de $CO_2$ relativa em função da fonte de energia utilizada.}
+            \label{fig:emissaorelsens}
+        \end{figure}
 
         O código foi implementado em Python e pode ser encontrado em \href{https://github.com/TiagoCAAmorim/IntegratedModel/}{https://github.com/TiagoCAAmorim/Integra tedModel/}.
 
@@ -539,177 +668,178 @@ country={Brasil}}
 
 \appendix
 
-\section{Lista de Variáveis}
+    \section{Lista de Variáveis}
 
-\begin{description}
-    \item[$^oAPI$:]Grau API do óleo.
-    \item[$\beta$:]Constante de ajuste da eficiência energética.
-    \item[$Bp$:]Fator volume de formação da fase $p$ no reservatório ($m^3/m^3$).
-    \item[$c_o$:]Compressibilidade do óleo ($1/bar$).
-    \item[$D$:]Profundidade.
-    \item[$d$:]Diâmetro da tubulação ($m$).
-    \item[$dp$:]Densidade relativa da fase $p$.
-    \item[$\Delta x$:]Discretização espacial na direção $i$.
-    \item[$\Delta y$:]Discretização espacial na direção $j$.
-    \item[$\Delta z$:]Discretização espacial na direção $k$.
-    \item[$\Delta t$:]Discretização temporal.
-    \item[$\eta$:]Eficiência energética.
-    \item[$\gamma_p$:]Peso específico da fase $p$ ($\gamma_p = \rho_p g$).
-    \item[$\dot{\gamma}$:]Taxa de cisalhamento ($1/s$).
-    \item[$k$:]Permeabilidade absoluta do meio poroso.
-    \item[$k_{rp}$:]Permeabilidade relativa da fase $p$.
-    \item[$\mu_p$:]Viscosidade da fase $p$.
-    \item[$p_p$:]Pressão da fase $p$.
-    \item[$\phi$:]Porosidade da rocha.
-    \item[$q_p$:]Vazão volumétrica da fase $p$.
-    \item[$q^w_{cp}$:]Vazão mássica do componente $c$ na fase $p$.
-    \item[$q^{std}_{cp}$:]Vazão volumétrica da fase $p$ medida em condições padrão (\emph{standard}).
-    \item[$RGO$]Razão gás-óleo em condições de superfície ($m^3/m^3$).
-    \item[$\rho_p$:]Densidade da fase $p$.
-    \item[$S_p$:]Saturação da fase $p$ no meio poroso.
-    \item[$V$:]Volume total do volume de controle (célula).
-    \item[$wcut$:]Corte de água ($Qw/(Qw+Qo)$).
-    \item[$v_p$:]Velocidade da fase $p$.
-    \item[$y_{cp}$:]Concentração do componente $c$ na fase $p$.
-\end{description}
+        \begin{description}
+            \item[$^oAPI$:]Grau API do óleo.
+            \item[$\beta$:]Constante de ajuste da eficiência energética.
+            \item[$Bp$:]Fator volume de formação da fase $p$ no reservatório ($m^3/m^3$).
+            \item[$c_o$:]Compressibilidade do óleo ($1/bar$).
+            \item[$D$:]Profundidade.
+            \item[$d$:]Diâmetro da tubulação ($m$).
+            \item[$dp$:]Densidade relativa da fase $p$.
+            \item[$\Delta x$:]Discretização espacial na direção $i$.
+            \item[$\Delta y$:]Discretização espacial na direção $j$.
+            \item[$\Delta z$:]Discretização espacial na direção $k$.
+            \item[$\Delta t$:]Discretização temporal.
+            \item[$\eta$:]Eficiência energética.
+            \item[$\gamma_p$:]Peso específico da fase $p$ ($\gamma_p = \rho_p g$).
+            \item[$\dot{\gamma}$:]Taxa de cisalhamento ($1/s$).
+            \item[$k$:]Permeabilidade absoluta do meio poroso.
+            \item[$k_{rp}$:]Permeabilidade relativa da fase $p$.
+            \item[$\mu_p$:]Viscosidade da fase $p$.
+            \item[$p_p$:]Pressão da fase $p$.
+            \item[$Pwf$:]Pressão de fluxo no fundo do poço (\emph{Bottom-hole pressure}).
+            \item[$Pwh$:]Pressão de cabeça do poço (\emph{Wellhead pressure}).
+            \item[$\phi$:]Porosidade da rocha.
+            \item[$q_p$:]Vazão volumétrica da fase $p$.
+            \item[$q^w_{cp}$:]Vazão mássica do componente $c$ na fase $p$.
+            \item[$q^{std}_{cp}$:]Vazão volumétrica da fase $p$ medida em condições padrão (\emph{standard}).
+            \item[$RGO$]Razão gás-óleo em condições de superfície ($m^3/m^3$).
+            \item[$\rho_p$:]Densidade da fase $p$.
+            \item[$S_p$:]Saturação da fase $p$ no meio poroso.
+            \item[$V$:]Volume total do volume de controle (célula).
+            \item[$wcut$:]Corte de água ($Qw/(Qw+Qo)$).
+            \item[$v_p$:]Velocidade da fase $p$.
+            \item[$y_{cp}$:]Concentração do componente $c$ na fase $p$.
+        \end{description}
 
-\section{Figuras dos Resultados} \label{sec:figuras}
+    \section{Resultados do Modelo Proposto} \label{sec:figuras}
 
-\begin{figure}[H]
-    \begin{tikzpicture}
-        \begin{axis}[
-            grid=both,
-            xlabel = {Tempo [$d$]},
-            ylabel = {Passo de Tempo [$d$]},
-            ]
-            \addplot[color=blue, solid, thick] table [x=Time_d, y=TimeStep_d] {results.txt};
-        \end{axis}
-    \end{tikzpicture}
-    \caption{Passos de tempo.}
-    \label{fig:deltat}
-\end{figure}
+        \begin{figure}[H]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {Passo de Tempo [$d$]},
+                    ]
+                    \addplot[color=blue, solid, thick] table [x=Time_d, y=TimeStep_d] {results_main.txt};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Passos de tempo.}
+            \label{fig:deltat}
+        \end{figure}
 
-\begin{figure}[H]
-    \begin{tikzpicture}
-        \begin{axis}[
-            grid=both,
-            xlabel = {Tempo [$d$]},
-            ylabel = {Vazão [$m^3/d$]},
-            legend style={at={(0.90,0.50)}, anchor=east, font=\footnotesize},
-            ]
-            \addplot[color=green, solid, thick] table [x=Time_d, y=Qo_m3/d] {results.txt};
-            \addplot[color=blue, solid, thick] table [x=Time_d, y=Qw_m3/d] {results.txt};
-            \addplot[color=black, solid, thick] table [x=Time_d, y=Qwi_m3/d] {results.txt};
-            \legend{Qo, Qw, Qwi};
-        \end{axis}
-    \end{tikzpicture}
-    \caption{Vazão de óleo e água.}
-    \label{fig:vazao}
-\end{figure}
+        \begin{figure}[H]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {Vazão [$m^3/d$]},
+                    legend style={at={(0.90,0.50)}, anchor=east, font=\footnotesize},
+                    ]
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=Qo_m3/d] {results_main.txt};
+                    \addplot[color=blue, solid, thick] table [x=Time_d, y=Qw_m3/d] {results_main.txt};
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=Qwi_m3/d] {results_main.txt};
+                    \legend{Qo, Qw, Qwi};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Vazão de óleo e água.}
+            \label{fig:vazao}
+        \end{figure}
 
-\begin{figure}[H]
-    \begin{tikzpicture}
-        \begin{axis}[
-            grid=both,
-            xlabel = {Tempo [$d$]},
-            ylabel = {Vazão [$m^3/d$]},
-            legend style={font=\footnotesize},
-            ]
-            \addplot[color=red, solid, thick] table [x=Time_d, y=Qg_m3/d] {results.txt};
-            \addplot[color=black, solid, thick] table [x=Time_d, y=QgFlare_m3/d] {results.txt};
-            \addplot[color=green, solid, thick] table [x=Time_d, y=QgFuel_m3/d] {results.txt};
-            \addplot[color=blue, solid, thick] table [x=Time_d, y=QgExp_m3/d] {results.txt};
-            \legend{Produção, \emph{Flare}, Combustível, Exportação};
-        \end{axis}
-    \end{tikzpicture}
-    \caption{Gerenciamento do gás.}
-    \label{fig:gerenciamentogas}
-\end{figure}
+        \begin{figure}[H]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {Vazão [$m^3/d$]},
+                    legend style={font=\footnotesize},
+                    ]
+                    \addplot[color=red, solid, thick] table [x=Time_d, y=Qg_m3/d] {results_main.txt};
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=QgFlare_m3/d] {results_main.txt};
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=QgFuel_m3/d] {results_main.txt};
+                    \addplot[color=blue, solid, thick] table [x=Time_d, y=QgExp_m3/d] {results_main.txt};
+                    \legend{Produção, \emph{Flare}, Combustível, Exportação};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Gerenciamento do gás.}
+            \label{fig:gerenciamentogas}
+        \end{figure}
 
-\begin{figure}[H]
-    \begin{tikzpicture}
-        \begin{axis}[
-            grid=both,
-            xlabel = {Tempo [$d$]},
-            ylabel = {Pressão [$bar$]},
-            legend style={font=\footnotesize},
-            ]
-            \addplot[color=green, solid, thick] table [x=Time_d, y=PwfProd_bar] {results.txt};
-            \addplot[color=blue, solid, thick] table [x=Time_d, y=PwfInj_bar] {results.txt};
-            \addplot[color=green, dashed, thick] table [x=Time_d, y=PwhProd_bar] {results.txt};
-            \addplot[color=blue, dashed, thick] table [x=Time_d, y=PwhInj_bar] {results.txt};
-            \legend{$Pwf_{prod.}$, $Pwf_{inj.}$, $Pwh_{prod.}$, $Pwh_{inj.}$};
-        \end{axis}
-    \end{tikzpicture}
-    \caption{Pressões de fundo e de cabeça dos poços.}
-    \label{fig:pressoespocos}
-\end{figure}
+        \begin{figure}[H]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {Pressão [$bar$]},
+                    legend style={font=\footnotesize},
+                    ]
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_main.txt};
+                    \addplot[color=blue, solid, thick] table [x=Time_d, y=PwfInj_bar] {results_main.txt};
+                    \addplot[color=green, dashed, thick] table [x=Time_d, y=PwhProd_bar] {results_main.txt};
+                    \addplot[color=blue, dashed, thick] table [x=Time_d, y=PwhInj_bar] {results_main.txt};
+                    \legend{$Pwf_{prod.}$, $Pwf_{inj.}$, $Pwh_{prod.}$, $Pwh_{inj.}$};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Pressões de fundo e de cabeça dos poços.}
+            \label{fig:pressoespocos}
+        \end{figure}
 
-\begin{figure}[H]
-    \begin{tikzpicture}
-        \begin{axis}[
-            grid=both,
-            xlabel = {Tempo [$d$]},
-            ylabel = {Energia [$MW$]},
-            legend style={font=\footnotesize},
-            ]
-            \addplot[color=red, solid, thick] table [x=Time_d, y=Pump_MW] {results.txt};
-            \addplot[color=black, solid, thick] table [x=Time_d, y=ESP_MW] {results.txt};
-            \addplot[color=green, solid, thick] table [x=Time_d, y=ExpCompr_MW] {results.txt};
-            \addplot[color=blue, solid, thick] table [x=Time_d, y=TotalPower_MW] {results.txt};
-            \legend{Bomba de água, \emph{ESP}, Exportação, Total};
-        \end{axis}
-    \end{tikzpicture}
-    \caption{Demanda energética.}
-    \label{fig:demandaenergia}
-\end{figure}
+        \begin{figure}[H]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {Energia [$MW$]},
+                    legend style={font=\footnotesize},
+                    ]
+                    \addplot[color=red, solid, thick] table [x=Time_d, y=Pump_MW] {results_main.txt};
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=ESP_MW] {results_main.txt};
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=ExpCompr_MW] {results_main.txt};
+                    \addplot[color=blue, solid, thick] table [x=Time_d, y=TotalPower_MW] {results_main.txt};
+                    \legend{Bomba de água, \emph{ESP}, Exportação, Total};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Demanda energética.}
+            \label{fig:demandaenergia}
+        \end{figure}
 
-\begin{figure}[H]
-    \begin{tikzpicture}
-        \begin{axis}[
-            grid=both,
-            xlabel = {Tempo [$d$]},
-            ylabel = {Emissão [$ton-CO_2/d$]},
-            legend style={font=\footnotesize},
-            ]
-            \addplot[color=red, solid, thick] table [x=Time_d, y=GasEmission_tonCO2/d] {results.txt};
-            \addplot[color=blue, solid, thick] table [x=Time_d, y=DieselEmission_tonCO2/d] {results.txt};
-            \addplot[color=black, solid, thick] table [x=Time_d, y=TotalEmission_tonCO2/d] {results.txt};
-            \legend{Gás Combustível, Diesel, Total};
-        \end{axis}
-    \end{tikzpicture}
-    \caption{Emissão de $CO_2$.}
-    \label{fig:emissao}
-\end{figure}
+        \begin{figure}[H]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {Emissão [$tonCO_2/d$]},
+                    legend style={font=\footnotesize},
+                    ]
+                    \addplot[color=red, solid, thick] table [x=Time_d, y=GasEmission_tonCO2/d] {results_main.txt};
+                    \addplot[color=blue, solid, thick] table [x=Time_d, y=DieselEmission_tonCO2/d] {results_main.txt};
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=TotalEmission_tonCO2/d] {results_main.txt};
+                    \legend{Gás Combustível, Diesel, Total};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Emissão de $CO_2$.}
+            \label{fig:emissao}
+        \end{figure}
 
-\begin{figure}[H]
-    \begin{tikzpicture}
-        \begin{axis}[
-            grid=both,
-            xlabel = {Tempo [$d$]},
-            ylabel = {Emissão [$ton-CO_2$]},
-            ]
-            \addplot[color=black, solid, thick] table [x=Time_d, y=CumEmission_tonCO2] {results.txt};
-        \end{axis}
-    \end{tikzpicture}
-    \caption{Emissão de $CO_2$ acumulada.}
-    \label{fig:emissaocum}
-\end{figure}
+        \begin{figure}[H]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {Emissão [$tonCO_2$]},
+                    ]
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=CumEmission_tonCO2] {results_main.txt};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Emissão de $CO_2$ acumulada.}
+            \label{fig:emissaocum}
+        \end{figure}
 
-\begin{figure}[H]
-    \begin{tikzpicture}
-        \begin{axis}[
-            grid=both,
-            xlabel = {Tempo [$d$]},
-            ylabel = {Emissão [$kg-CO_2/boe$]},
-            ]
-            \addplot[color=black, solid, thick] table [x=Time_d, y=RelEmission_kgCO2/boe] {results.txt};
-        \end{axis}
-    \end{tikzpicture}
-    \caption{Emissão de $CO_2$ relativa.}
-    \label{fig:emissaorel}
-\end{figure}
-
+        \begin{figure}[H]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {Emissão [$kgCO_2/boe$]},
+                    ]
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=RelEmission_kgCO2/boe] {results_main.txt};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Emissão de $CO_2$ relativa.}
+            \label{fig:emissaorel}
+        \end{figure}
 %
 %  	   RelEmission_kgCO2/boe
 
