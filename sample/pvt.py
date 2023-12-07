@@ -57,6 +57,8 @@ class PVT:
         self._q = None
         self._d = None
 
+        self._check_values = True
+
         self.variables = common.VariablesList({
             'wfr':['Water fraction', '-'],
             'api':['Oil API degree', 'oAPI'],
@@ -141,11 +143,18 @@ class PVT:
         pvt._emulsion = self._emulsion
         pvt._q = self._q
         pvt._d = self._d
+
+        pvt._check_values = self._check_values
         return pvt
 
     def _check_value(self,value, min_value, max_value):
+        if not self._check_values:
+            return
         if value < min_value or value > max_value:
             raise NameError(f'Invalid value ({value}). Valid values: [{min_value},{max_value}].')
+
+    def set_check_values(self, check):
+        self._check_values = check
 
     def set_wfr(self, wfr):
         self._check_value(wfr,0.,1.)

@@ -350,15 +350,17 @@ class Simple2D_OW:
                 if add_current_solution:
                     return
                 percentage_completion = min(0.999, t / self._t_end) * 100
-                progress_bar.update(percentage_completion - progress_bar.n)
+                if not add_current_solution:
+                    progress_bar.update(percentage_completion - progress_bar.n)
                 dt = min(dt * 1.2, self._max_dt)
             else:
                 dt = max(dti / 2., self._min_dt)
                 if self._debug:
                     print(f" {self._t_list[-1]:10.2f} days: time-step cut. New dt = {dt:10.5f} days")
 
-        progress_bar.close()
-        print("End of simulation.")
+        if not add_current_solution:
+            progress_bar.close()
+            print("End of simulation.")
 
     def get_t(self):
         return self._t_list

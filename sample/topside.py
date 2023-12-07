@@ -109,6 +109,7 @@ class CO2_Emission:
         self._emission = None
         self.generator = GasTurbine()
         self._diesel_power = 0.
+        self._diesel_relative_emission = 24.*2.39/9.7
 
     def set_mole_pc(self, component, value):
         if component in self._mole_pc.keys():
@@ -121,6 +122,8 @@ class CO2_Emission:
     def set_other_c(self, value):
         self._c['other'] = value
 
+    def set_diesel_relative_emission(self, value):
+        self._diesel_relative_emission = value
     def set_diesel_power(self, value):
         self._diesel_power = value
     def get_diesel_power(self):
@@ -150,7 +153,7 @@ class CO2_Emission:
         return self._emission * self.generator.get_fuel(power_demand)
 
     def get_diesel_emission(self):
-        return self._diesel_power * 1E3 * 24.*2.39/9.7
+        return self._diesel_power * 1E3 * self._diesel_relative_emission
 
     def get_emission(self, gas_power_demand):
         return self._emission * self.generator.get_fuel(gas_power_demand) + self._diesel_power * 24.*2.39/9.7

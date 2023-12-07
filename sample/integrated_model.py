@@ -90,6 +90,8 @@ class Integration:
         self.reservoir.set_bw(1.)
         self.reservoir.set_uw(1.)
         self.reservoir.set_p_init(self._reservoir_p)
+        self.reservoir.reset_sim()
+
 
         self._last_pwf = 0.8 * self._reservoir_p
 
@@ -157,7 +159,7 @@ class Integration:
         # print(f" {self.reservoir.get_t()[-1]:10.2f} days: time-step advance. New dt = {dt:10.5f} days")
         return dt
 
-    def run_simulation(self, dt):
+    def run_simulation(self, dt, make_plots=True):
         self.initialize()
         t = 0.
         dti = dt
@@ -176,7 +178,8 @@ class Integration:
             progress_bar.update(percentage_completion - progress_bar.n)
         progress_bar.close()
         self._file.close()
-        self.make_all_plots()
+        if make_plots:
+            self.make_all_plots()
         print("End of simulation.")
 
     def solve_water_injection(self):
@@ -235,52 +238,52 @@ class Integration:
         self._emission_boe.append(self._total_emission[-1] / (self._qo[-1] + self._qg[-1]/1000.))
 
     def print_heading(self):
-        s = f'{"Time[d]":>25s},'
-        s += f'\t{"TimeStep[d]":>25s},'
-        s += f'\t{"Qo[m3/d]":>25s},'
-        s += f'\t{"Qw[m3/d]":>25s},'
-        s += f'\t{"Qg[m3/d]":>25s},'
-        s += f'\t{"Qwi[m3/d]":>25s},'
-        s += f'\t{"PwfProd[bar]":>25s},'
-        s += f'\t{"PwfInj[bar]":>25s},'
-        s += f'\t{"PwhProd[bar]":>25s},'
-        s += f'\t{"PwhInj[bar]":>25s},'
-        s += f'\t{"QgFlare[m3/d]":>25s},'
-        s += f'\t{"QgFuel[m3/d]":>25s},'
-        s += f'\t{"QgExp[m3/d]":>25s},'
-        s += f'\t{"Pump[MW]":>25s},'
-        s += f'\t{"ESP[MW]":>25s},'
-        s += f'\t{"ExpCompr[MW]":>25s},'
-        s += f'\t{"TotalPower[MW]":>25s},'
-        s += f'\t{"GasEmission[tonCO2/d]":>25s},'
-        s += f'\t{"DieselEmission[tonCO2/d]":>25s},'
-        s += f'\t{"TotalEmission[tonCO2/d]":>25s},'
-        s += f'\t{"CumEmission[tonCO2]":>25s},'
-        s += f'\t{"RelEmission[kgCO2/boe]":>25s}'
+        s = f'{"Time_d":>25s}'
+        s += f'\t{"TimeStep_d":>25s}'
+        s += f'\t{"Qo_m3/d":>25s}'
+        s += f'\t{"Qw_m3/d":>25s}'
+        s += f'\t{"Qg_m3/d":>25s}'
+        s += f'\t{"Qwi_m3/d":>25s}'
+        s += f'\t{"PwfProd_bar":>25s}'
+        s += f'\t{"PwfInj_bar":>25s}'
+        s += f'\t{"PwhProd_bar":>25s}'
+        s += f'\t{"PwhInj_bar":>25s}'
+        s += f'\t{"QgFlare_m3/d":>25s}'
+        s += f'\t{"QgFuel_m3/d":>25s}'
+        s += f'\t{"QgExp_m3/d":>25s}'
+        s += f'\t{"Pump_MW":>25s}'
+        s += f'\t{"ESP_MW":>25s}'
+        s += f'\t{"ExpCompr_MW":>25s}'
+        s += f'\t{"TotalPower_MW":>25s}'
+        s += f'\t{"GasEmission_tonCO2/d":>25s}'
+        s += f'\t{"DieselEmission_tonCO2/d":>25s}'
+        s += f'\t{"TotalEmission_tonCO2/d":>25s}'
+        s += f'\t{"CumEmission_tonCO2":>25s}'
+        s += f'\t{"RelEmission_kgCO2/boe":>25s}'
         self._file.write(s + '\n')
 
     def print_results(self):
-        s  =   f'{self._t[-1]:25.2f},'
-        s += f'\t{self._t[-1]-self._t[-2]:25.2f},'
-        s += f'\t{self._qo[-1]:25.2f},'
-        s += f'\t{self._qw[-1]:25.2f},'
-        s += f'\t{self._qg[-1]:25.2f},'
-        s += f'\t{self._qwi[-1]:25.2f},'
-        s += f'\t{self._pwf_prod[-1]:25.2f},'
-        s += f'\t{self._pwf_inj[-1]:25.2f},'
-        s += f'\t{self._pwh_prod[-1]:25.2f},'
-        s += f'\t{self._pwh_inj[-1]:25.2f},'
-        s += f'\t{self._qg_flare[-1]:25.2f},'
-        s += f'\t{self._qg_fuel[-1]:25.2f},'
-        s += f'\t{self._qg_export[-1]:25.2f},'
-        s += f'\t{self._pump_power[-1]:25.2f},'
-        s += f'\t{self._esp_power[-1]:25.2f},'
-        s += f'\t{self._export_power[-1]:25.2f},'
-        s += f'\t{self._total_power[-1]:25.2f},'
-        s += f'\t{self._gas_emission[-1]/1000.:25.2f},'
-        s += f'\t{self._diesel_emission[-1]/1000.:25.2f},'
-        s += f'\t{self._total_emission[-1]/1000.:25.2f},'
-        s += f'\t{self._cumulative_emission[-1]/1000.:25.2f},'
+        s  =   f'{self._t[-1]:25.2f}'
+        s += f'\t{self._t[-1]-self._t[-2]:25.2f}'
+        s += f'\t{self._qo[-1]:25.2f}'
+        s += f'\t{self._qw[-1]:25.2f}'
+        s += f'\t{self._qg[-1]:25.2f}'
+        s += f'\t{self._qwi[-1]:25.2f}'
+        s += f'\t{self._pwf_prod[-1]:25.2f}'
+        s += f'\t{self._pwf_inj[-1]:25.2f}'
+        s += f'\t{self._pwh_prod[-1]:25.2f}'
+        s += f'\t{self._pwh_inj[-1]:25.2f}'
+        s += f'\t{self._qg_flare[-1]:25.2f}'
+        s += f'\t{self._qg_fuel[-1]:25.2f}'
+        s += f'\t{self._qg_export[-1]:25.2f}'
+        s += f'\t{self._pump_power[-1]:25.2f}'
+        s += f'\t{self._esp_power[-1]:25.2f}'
+        s += f'\t{self._export_power[-1]:25.2f}'
+        s += f'\t{self._total_power[-1]:25.2f}'
+        s += f'\t{self._gas_emission[-1]/1000.:25.2f}'
+        s += f'\t{self._diesel_emission[-1]/1000.:25.2f}'
+        s += f'\t{self._total_emission[-1]/1000.:25.2f}'
+        s += f'\t{self._cumulative_emission[-1]/1000.:25.2f}'
         s += f'\t{self._emission_boe[-1]:25.2f}'
         self._file.write(s + '\n')
 

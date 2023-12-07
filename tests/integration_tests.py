@@ -18,8 +18,35 @@ def simple_plot(x,y, x_label, y_label, title, file):
     plt.title(title)
     save_plot(plt,file)
 
-def set_system_prod(line):
-    line.set_d(4. * 2.54/100.)
+def make_plots(model):
+    t = model.reservoir.get_t()
+    p1 = model.reservoir.get_pr_cell(0,0)
+    p2 = model.reservoir.get_pr_cell(int(model.reservoir.get_ni()/2),int(model.reservoir.get_nj()/2))
+    p3 = model.reservoir.get_pr_cell(model.reservoir.get_ni()-1,model.reservoir.get_nj()-1)
+
+    _ = plt.figure()
+    plt.plot(t, p1, label="Pr1")
+    plt.plot(t, p2, label="Pr2")
+    plt.plot(t, p3, label="Pr3")
+
+    ax = plt.gca()
+    ax.legend()
+    plt.grid()
+    plt.xlabel('t')
+    plt.ylabel('Pr [bar]')
+    plt.title('Simulation')
+    save_plot(plt,'sim_pr')
+
+    if model.reservoir.get_ni() > 1 and model.reservoir.get_nj() > 1:
+        _ = plt.figure()
+        sw = model.reservoir.get_sw_map(-1)
+        plt.contourf(sw)
+        plt.colorbar(label='Contour levels')
+        plt.title('Sw Map')
+        save_plot(plt,'sim_final_sw')
+
+def set_system_prod(line, d=4.):
+    line.set_d(d * 2.54/100.)
     line.set_e(0.6 / 1000.)
     line.set_number_divisions(100)
 
@@ -43,8 +70,8 @@ def set_system_prod(line):
     line.current_element.set_z_out(0.)
     line.current_element.set_number_divisions(5)
 
-def set_system_inj(line):
-    line.set_d(4. * 2.54/100.)
+def set_system_inj(line, d=4.):
+    line.set_d(d * 2.54/100.)
     line.set_e(0.6 / 1000.)
     line.set_number_divisions(100)
 
@@ -83,11 +110,6 @@ def set_reservoir(model):
     model.set_ni(5)
     model.set_nj(5)
 
-    # model.set_bo(1.01)
-    # model.set_uo(130.)
-    # model.set_bw(1.)
-    # model.set_uw(1.)
-
     model.kr.sat.set_swi(0.20)
     model.kr.sat.set_swc(0.20)
     model.kr.sat.set_sorw(0.16)
@@ -103,7 +125,6 @@ def set_reservoir(model):
     # model.set_pwf(330.)
     model.set_qwi(1000.)
 
-    model.set_t_end(365.25 * 5.)
     model.set_max_dsw(0.005)
     model.set_max_dpr(5.)
     model.set_max_dt(10.)
@@ -112,7 +133,6 @@ def set_reservoir(model):
 
 def test1():
     model = integrated_model.Integration(debug=False)
-    model.set_file_name('results.txt')
     model.set_out_folder(path+'/plots/integration/')
 
     set_pvt(model.pvt)
@@ -148,33 +168,62 @@ def test1():
     model.set_well_head_t(50.)
     model.set_well_head_p(20.)
 
-    model.run_simulation(2.0)
+    model.set_file_name('results_main.txt')
+    model.reservoir.set_t_end(365. * 5.)
+    model.run_simulation(0.5)
+    make_plots(model)
 
-    t = model.reservoir.get_t()
-    p1 = model.reservoir.get_pr_cell(0,0)
-    p2 = model.reservoir.get_pr_cell(int(model.reservoir.get_ni()/2),int(model.reservoir.get_nj()/2))
-    p3 = model.reservoir.get_pr_cell(model.reservoir.get_ni()-1,model.reservoir.get_nj()-1)
+    #Sensibility
+    model.set_file_name('results_esp0.0.txt')
+    model.flow_prod.set_esp_delta_p(0.)
+    model.run_simulation(0.5, False)
 
-    _ = plt.figure()
-    plt.plot(t, p1, label="Pr1")
-    plt.plot(t, p2, label="Pr2")
-    plt.plot(t, p3, label="Pr3")
+    model.set_file_name('results_esp100.0.txt')
+    model.flow_prod.set_esp_delta_p(100.)
+    model.run_simulation(0.5, False)
 
-    ax = plt.gca()
-    ax.legend()
-    plt.grid()
-    plt.xlabel('t')
-    plt.ylabel('Pr [bar]')
-    plt.title('Simulation')
-    save_plot(plt,'sim_pr')
+    # model.set_file_name('results_esp200.0.txt')
+    # model.flow_prod.set_esp_delta_p(200.)
+    # model.run_simulation(0.5, False)
 
-    # model.run_simulation(2.0)
+    model.flow_prod.set_esp_delta_p(50.)
 
-        # pump = topside.WaterPump()
-    # pump.set_qw(350. * 24.)
+    model.set_file_name('results_d6_prod.txt')
+    set_system_prod(model.flow_prod, 6.)
+    model.flow_prod.set_esp_delta_p(50.)
+    model.flow_prod.set_esp_eff(0.6)
+    model.flow_prod.set_esp_eff_coef(200.)
+    model.run_simulation(0.5, False)
 
+    model.set_file_name('results_d6_inj.txt')
+    set_system_prod(model.flow_prod, 4.)
+    model.flow_prod.set_esp_delta_p(50.)
+    model.flow_prod.set_esp_eff(0.6)
+    model.flow_prod.set_esp_eff_coef(200.)
+    set_system_inj(model.flow_inj, 6.)
+    model.run_simulation(0.5, False)
 
+    set_system_inj(model.flow_inj, 4.)
+
+    model.set_file_name('results_green_diesel_1.txt')
+    model.emission.set_diesel_relative_emission(24.*2.39/9.7 * 0.35)
+    model.run_simulation(0.5, False)
+
+    model.set_file_name('results_green_diesel_2.txt')
+    model.emission.set_diesel_relative_emission(24.*2.39/9.7 * 0.95)
+    model.run_simulation(0.5, False)
+
+    model.set_file_name('results_windfarm.txt')
+    model.emission.set_diesel_relative_emission(0.)
+    model.run_simulation(0.5, False)
+
+    model.emission.set_diesel_relative_emission(24.*2.39/9.7)
+    model.reservoir.set_t_end(10.)
+    model.pvt.set_check_values(False)
+    for i in range(11):
+        model.set_file_name(f'results_1stSw_{i}pc.txt')
+        model.reservoir.set_first_cell_dsw(i/100.)
+        model.run_simulation(0.5, False)
 
 if __name__ == "__main__":
     test1()
-    pass
