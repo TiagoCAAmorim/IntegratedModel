@@ -21,12 +21,12 @@ def simple_plot(x,y, x_label, y_label, title, file):
 
     common.make_columns_file(x, y, x_label, y_label, path+'/plots/flow/'+file+'.txt')
 
-def define_common_parameters(line):
+def define_common_parameters(line, diameter=6.):
     line.pvt.set_api(15.)
     line.pvt.set_gor(2.)
     line.pvt.set_dg(0.6)
 
-    line.set_d(6. * 2.54/100.)
+    line.set_d(diameter * 2.54/100.)
     line.set_e(0.6 / 1000.)
 
     line.set_p_in(300.)
@@ -243,38 +243,38 @@ def vertical_two_elements_test():
     plt.title('1600 m Vetical Line as Two Elements')
     save_plot(plt,'vertical2')
 
-def define_system_ex1(debug_mode):
+def define_system_ex1(debug_mode, dp_ESP=50., diameter=6.):
     line = flow.CompositeFlowElement(debug_mode=debug_mode)
-    define_common_parameters(line)
+    define_common_parameters(line, diameter)
     line.set_number_divisions(100)
 
     line.add_element()
     line.current_element.set_h(1600.)
     line.current_element.set_z_in(-1600. + -1320.)
     line.current_element.set_z_out(-1320.)
-    line.current_element.set_number_divisions(5)
+    line.current_element.set_number_divisions(50)
 
     line.add_element(True) #ESP
-    line.current_element.set_delta_p(50.)
+    line.current_element.set_delta_p(dp_ESP)
 
     line.add_element()
     line.current_element.set_h(500.)
     line.current_element.set_z_in(-1320.)
     line.current_element.set_z_out(-1320.)
-    line.current_element.set_number_divisions(2)
+    line.current_element.set_number_divisions(20)
 
     line.add_element()
     line.current_element.set_h(1320.)
     line.current_element.set_z_in(-1320.)
     line.current_element.set_z_out(0.)
-    line.current_element.set_number_divisions(5)
+    line.current_element.set_number_divisions(50)
 
     return line
 
-def system_ex1(wfr=0.0):
+def system_ex1(wfr=0.0, dp_ESP=50.0, diameter=6.):
     print(f'System with 3 Elements - Example 1: wfr = {wfr*100:0.0f}%')
 
-    line = define_system_ex1(debug_mode=debug_mode)
+    line = define_system_ex1(debug_mode=debug_mode, dp_ESP=dp_ESP,  diameter=diameter)
     line.pvt.set_wfr(wfr)
     line.pvt.set_emulsion(True)
     line.set_esp_eff(0.5)
@@ -311,7 +311,7 @@ def system_ex1(wfr=0.0):
     plt.ylabel('p [bar]')
     plt.title(f'System with 3 Elements: wfr = {wfr*100:0.0f}%')
     save_plot(plt,f'system1_{wfr*100:0.0f}pc')
-    filename = path+'/plots/flow/'+f'system1_{wfr*100:0.0f}pc'+'.txt'
+    filename = path+'/plots/flow/'+f'system1_{wfr*100:0.0f}pc_{dp_ESP:0.0f}bar_{diameter:0.0f}pol'+'.txt'
     common.make_columns_file([0] + line.get_h_cumulative(), line.get_p_in() + [line.get_p_out()[-1]], "Length_m", "Pressure_bar", filename)
 
 def system_ex1_emulsion():
@@ -449,9 +449,9 @@ def system_ex1_sensibility():
     plt.title('System with 3 Elements')
     save_plot(plt,'system1_d')
 
-def define_system_ex2(debug_mode):
+def define_system_ex2(debug_mode, diameter=6.):
     line = flow.CompositeFlowElement(debug_mode=debug_mode)
-    define_common_parameters(line)
+    define_common_parameters(line, diameter)
     line.pvt.set_wfr(1.)
     line.set_number_divisions(100)
 
@@ -475,7 +475,7 @@ def define_system_ex2(debug_mode):
 
     return line
 
-def system_ex2():
+def system_ex2(diameter=6.):
     print('System with 3 Elements - Example 2: water injector')
 
     line = define_system_ex2(debug_mode=debug_mode)
@@ -511,22 +511,42 @@ def system_ex2():
     plt.xlabel('Lenght along element [m]')
     plt.ylabel('p [bar]')
     plt.title('System with 3 Elements: Qwi')
-    save_plot(plt,'system2')
+    save_plot(plt,f'system2_{diameter:0.0f}_pol')
+    common.make_columns_file(list1=[0] + line.get_h_cumulative(),
+                             list2=line.get_p_in() + [line.get_p_out()[-1]],
+                             column_name1="Length_m",
+                             column_name2="Pressure_bar",
+                             file_name=path+f'/plots/flow/system2_{diameter:0.0f}_pol.txt')
 
 if __name__ == "__main__":
-    # horizontal_test()
-    # horizontal_divided_test()
-    # horizontal_two_elements_test()
-    # vertical_test()
-    # vertical_divided_test()
-    # vertical_two_elements_test()
-    # vertical_sensibility_test()
-    # system_ex1(0.0)
-    # system_ex1(0.1)
+    horizontal_test()
+    horizontal_divided_test()
+    horizontal_two_elements_test()
+    vertical_test()
+    vertical_divided_test()
+    vertical_two_elements_test()
+    vertical_sensibility_test()
+
+    system_ex1(0.0)
+    system_ex1(0.1)
     system_ex1(0.2)
-    # system_ex1(0.3)
-    # system_ex1(0.4)
-    # system_ex1_emulsion()
-    # system_ex1_vfp()
-    # system_ex1_sensibility()
-    # system_ex2()
+    system_ex1(0.3)
+    system_ex1(0.4)
+
+    system_ex1(0.2, 0.)
+    system_ex1(0.2, 50.)
+    system_ex1(0.2, 100.)
+
+    system_ex1(0.2, 100., 4.)
+    system_ex1(0.2, 100., 5.)
+    system_ex1(0.2, 100., 4.)
+    system_ex1(0.2, 100., 6.)
+    system_ex1(0.2, 100., 8.)
+
+    system_ex1_emulsion()
+    system_ex1_vfp()
+    system_ex1_sensibility()
+
+    system_ex2(4.)
+    system_ex2(6.)
+    system_ex2(8.)
