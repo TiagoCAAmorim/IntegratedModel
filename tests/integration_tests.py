@@ -46,6 +46,7 @@ def make_plots(model):
         save_plot(plt,'sim_final_sw')
 
 def set_system_prod(line, d=4.):
+    line.reset_elements()
     line.set_d(d * 2.54/100.)
     line.set_e(0.6 / 1000.)
     line.set_number_divisions(100)
@@ -71,6 +72,7 @@ def set_system_prod(line, d=4.):
     line.current_element.set_number_divisions(5)
 
 def set_system_inj(line, d=4.):
+    line.reset_elements()
     line.set_d(d * 2.54/100.)
     line.set_e(0.6 / 1000.)
     line.set_number_divisions(100)

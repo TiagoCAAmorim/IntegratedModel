@@ -782,6 +782,9 @@ class CompositeFlowElement:
         for element in self._elements:
             element.pvt = self.pvt.copy()
 
+    def reset_elements(self):
+        self._elements = []
+
     def add_element(self, is_esp=False):
         if is_esp:
             self._elements.append(Esp(self._debug))
