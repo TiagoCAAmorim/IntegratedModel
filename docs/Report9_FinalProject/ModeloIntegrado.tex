@@ -215,7 +215,7 @@ country={Brasil}}
 
     \subsection{Propriedades de Fluido}
 
-        A descrição do fluido foi implementada como um objeto no módulo \emph{pvt.py}. Foram utilizadas as correlações de Standing\cite{standing1952volumetric} para estimativa de parâmetros de óleo e gás\footnote{As correlações utilizadas foram suprimidas deste relatório para não sobrecarregá-lo de informações, e podem ser encontradas em \cite{rosa2006engenharia}.}:
+        A descrição do fluido foi implementada na classe \textbf{PVT} do módulo \emph{pvt.py}. Foram utilizadas as correlações de Standing\cite{standing1952volumetric} para estimativa de parâmetros de óleo e gás\footnote{As correlações utilizadas foram suprimidas deste relatório para não sobrecarregá-lo de informações, e podem ser encontradas em \cite{rosa2006engenharia}.}:
 
         \begin{itemize}
             \item Fator volume de formação ($Bg$ e $Bo$).
@@ -232,10 +232,10 @@ country={Brasil}}
         Também existe a possibilidade de solicitar o uso da correlação de Rønningsen para estimar a viscosidade da mistura água-óleo considerando a formação de emulsões\cite{doi:10.1021/ef00041a001}:
 
         \begin{align}
-            \ln \eta_r &= k_1 + k_2 \, T + k_3 \, wcut  + k_4 \, T \, wcut
+            \ln \frac{\mu_{mix}}{\mu_o} &= k_1 + k_2 \, T + k_3 \, wcut  + k_4 \, T \, wcut
         \end{align}
 
-        Onde $\eta_r$ é a razão entre a viscosidade da emulsão e a viscosidade do óleo, $wcut$ é a fração de água e $T$ é a temperatura (em $^oC$). Os valores de $k_i$ são função da taxa de cisalhamento do fluido (Tabela \ref{tab:ronningsen}):
+        Onde $\mu_{mix}$ é a viscosidade da emulsão, $wcut$ é a fração de água e $T$ é a temperatura (em $^oC$). Os valores de $k_i$ são função da taxa de cisalhamento do fluido (Tabela \ref{tab:ronningsen}):
 
         \begin{align}
             \dot{\gamma} &= \frac{32 Q}{\pi d^3}
@@ -257,7 +257,7 @@ country={Brasil}}
 
         Para taxas de cisalhamento diferentes das tabeladas, foi utilizada uma interpolação linear.
 
-        Um pequeno ajuste foi realizado na formulação de Rønningsen. Para manter coerência com o cenário em que existe 100\% de óleo ($wcut=0$), o valor de $\eta_r$ é limitado à unidade (ver trecho reto para valores baixos de $wcut$ nas curvas da Figura \ref{fig:emulsao}).
+        Um pequeno ajuste foi realizado na formulação de Rønningsen. Para manter coerência com o cenário em que existe 100\% de óleo ($wcut=0$), o valor mínimo de $\frac{\mu_{mix}}{\mu_o}$ é igual à unidade (ver trecho reto para valores baixos de $wcut$ nas curvas da Figura \ref{fig:emulsao}).
 
         \begin{figure}[hbt!]
             \begin{tikzpicture}
@@ -327,7 +327,7 @@ country={Brasil}}
 
         As propriedades de fluido ($Bo$, $Bw$, $\mu_o$ e $\mu_w$) são constantes. O meio poroso também é incompressível, mas é possível definir valores de propriedade de rocha ($\phi$ e $k$) por célula.
 
-        Foram implementadas funções de permeabilidade relativa com as correlações de Corey\cite{1570009749409873792}. As permeabilidades relativas foram implementadas como um objeto à parte no módulo \emph{relative\_permeability.py}.
+        Foram implementadas funções de permeabilidade relativa com as correlações de Corey\cite{1570009749409873792}. As permeabilidades relativas foram implementadas na classe \textbf{Corey} no módulo \emph{relative\_permeability.py}.
 
         Em uma simulação \emph{Black-Oil} com água e óleo, a simulação de fluxo parte de um conjunto de valores de $p$ e $S_w$ no tempo inicial, para cada uma das células, e uma série de controles de produção ($q^{std}_p$). O simulador precisa resolver o conjunto de equações não lineares \ref{eq:blackoilumdw} e \ref{eq:blackoilumdo} a cada passo de tempo.
 
@@ -394,7 +394,7 @@ country={Brasil}}
 
     \subsection{Fluxo Vertical Multifásico}
 
-        Forma implementados quatro objetos no módulo \emph{flow.py}. Os cálculos de fluxo vertical multifásico são realizados no elemento mais básico, que representa um trecho de tubulação, com diâmetro e inclinação constante. Este elemento utiliza o módulo \emph{pvt.py} para estimar as propriedades de fluido. Foram consideras as formas de balanço de massa e energia de fluidos quasi-incompressíveis.
+        Forma implementadas quatro classes no módulo \emph{flow.py}. Os cálculos de fluxo vertical multifásico são realizados na classe mais básica (\textbf{SubFlowElement}), que representa um trecho de tubulação, com diâmetro e inclinação constante. Este elemento utiliza o módulo \emph{pvt.py} para estimar as propriedades de fluido. Foram consideras as formas de balanço de massa e energia de fluidos quasi-incompressíveis.
 
         A perda de pressão no elemento pode ser calculada em ambas direções, i.e., alimentando as condições de entrada ($p_a$: pressão de entrada) e calculando as condições de saída ($p_b$: pressão de saída), ou o inverso:
 
@@ -426,7 +426,7 @@ country={Brasil}}
 
         Não foram implementadas correlações para troca de temperatura. Todo o cálculo é realizado assumindo temperatura constante por elemento. Também não foi implementado o cálculo de fluxo com gás livre, de modo que apenas água e óleo podem existir no sistema.
 
-        O termo de ganho de energia com turbomáquinas foi deliberadamente retirado porque foi criado um objeto específico para representar uma bomba elétrica submersível (\emph{ESP}). Não foram implementadas tabelas de eficiências de bomba. O objeto \emph{ESP} apenas recebe um valor de incremento de pressão e um valor de eficiência. O incremento de pressão é adicionado nos cálculos do fluxo vertical multifásico no ponto em que o usuário colocar a bomba. Um segundo comando realiza os cálculos da potência necessária para aplicar o incremento de pressão ao fluido em questão.
+        O termo de ganho de energia com turbomáquinas foi deliberadamente retirado porque foi criada uma classe específica para representar uma bomba elétrica submersível (\textbf{ESP}). Não foram implementadas tabelas de eficiências de bomba. Um objeto \textbf{ESP} apenas recebe um valor de incremento de pressão e um valor de eficiência. O incremento de pressão é adicionado nos cálculos do fluxo vertical multifásico no ponto em que o usuário colocar a bomba. Um segundo comando realiza os cálculos da potência necessária para aplicar o incremento de pressão ao fluido em questão.
 
         Para levar em conta a variação na viscosidade da mistura água+óleo na eficiência da bomba, foi assumida\footnote{Esta correlação foi assumida sem nenhuma base científica. Foi utilizada apenas para que a viscosidade da mistura tenha algum impacto na demanda energética da \emph{ESP}.} uma correlação exponencial do tipo:
 
@@ -434,9 +434,9 @@ country={Brasil}}
             \eta_{ajustada} = \eta_{original} \exp \left[\frac{1}{\beta}\left(1-\frac{\mu}{\mu_o}\right) \right]
         \end{align}
 
-        O terceiro objeto implementado é uma coleção de trechos de tubulações. Desta forma é possível descrever uma tubulação e discretizá-la para fazer os cálculos de fluxo vertical multifásico.
+        A terceira classe implementada (\textbf{FlowElement}) é uma coleção de trechos de tubulações. Desta forma é possível descrever uma tubulação e discretizá-la para fazer os cálculos de fluxo vertical multifásico.
 
-        O último objeto é uma coleção de tubulações e bombas. Neste objeto é possível descrever todo o conjunto de elementos que interligam o poço à unidade de produção: colunas, bombas, linhas, \emph{risers} (exemplo na Figura \ref{fig:flow}). É também neste objeto que é possível fazer o cálculo do ponto de operação de um poço, seja com uma IPR analítica ou com um modelo de fluxo. É utilizado o Método da Secante para encontrar o ponto de operação.
+        A última classe é uma coleção de tubulações e bombas (\textbf{CompositeFlowElement}). Nesta classe é possível descrever todo o conjunto de elementos que interligam o poço à unidade de produção: colunas, bombas, linhas, \emph{risers} (exemplo na Figura \ref{fig:flow}). É também em um objeto desta classe que é possível fazer o cálculo do ponto de operação de um poço, seja com uma IPR analítica ou com um modelo de fluxo. É utilizado o Método da Secante para encontrar o ponto de operação.
 
         \begin{figure}[hbt!]
             \begin{tikzpicture}
@@ -455,18 +455,18 @@ country={Brasil}}
 
     \subsection{Equipamentos de Superfície}
 
-        Alguns dos equipamentos de superfície foram implementados no módulo \emph{topside.py}:
+        Alguns dos equipamentos de superfície foram implementados como classes no módulo \emph{topside.py}:
 
         \begin{description}
             \item[Separator] Faz o cálculo da máxima vazão de gás que um separador pode tratar. Também é feita uma estimativa da máxima vazão de óleo, mas sem considerações sobre o tempo de residência do líquido no separador.
-            \item[WaterPump] Implementa uma bomba de água de forma simplificada. Não foram implementadas tabelas de eficiência. O usuário precisa fornecer um valor de eficiência e o objeto retorna a demanda energética da bomba em função do incremento de pressão ou de \emph{head} necessário.
+            \item[WaterPump] Implementa uma bomba de água de forma simplificada. Não foram implementadas tabelas de eficiência. O usuário precisa fornecer um valor de eficiência e a classe retorna a demanda energética da bomba em função do incremento de pressão ou de \emph{head} necessário.
             \item[GasCompressor] A demanda energética do compressor de gás é estimada a partir das condições de fluxo requeridas (pressão e temperatura), eficiência politrópica (informada diretamente pelo usuário) e razão de capacidade térmica do fluido ($\kappa$).
             \item[GasTurbine] Implementa um interpolador. O usuário deve fornecer uma tabela de geração de energia ($MW$) em função da vazão de gás combustível ($m^3/d$). Uma função retorna vazão de gás combustível em função da demanda energética, e outra retorna geração de energia em função da vazão de gás combustível.
         \end{description}
 
-        Neste mesmo módulo foi implementado um objeto para fazer os cálculos de emissão de $CO_2$: \textbf{CO2\_Emission}. Neste objeto o usuário pode fornecer a composição do gás combustível e fazer o cálculo de emissão em função da demanda energética\cite{10.7122/151333-MS}.
+        Neste mesmo módulo foi implementado uma classe para fazer os cálculos de emissão de $CO_2$: \textbf{CO2\_Emission}. Em um objeto desta classe o usuário pode fornecer a composição do gás combustível e fazer o cálculo de emissão em função da demanda energética\cite{10.7122/151333-MS}.
 
-        Para o cálculo da demanda energética este objeto contém um \textbf{GasTurbine}, com o qual é possível calcular a quantidade de gás combustível necessário para atender a demanda. Nos casos em que não existe gás o suficiente para atender a demanda, é possível informar a quantidade de energia a ser atendida com geradores a diesel. A emissão de $CO_2$ associada à queima de diesel será adicionada à de queima de gás combustível no cálculo das emissões.
+        Para o cálculo da demanda energética esta classe contém um \textbf{GasTurbine}, com o qual é possível calcular a quantidade de gás combustível necessário para atender a demanda. Nos casos em que não existe gás o suficiente para atender a demanda, é possível informar a quantidade de energia a ser atendida com geradores a diesel. A emissão de $CO_2$ associada à queima de diesel será adicionada à de queima de gás combustível no cálculo das emissões.
 
     \subsection{Modelo Integrado}
 
@@ -482,7 +482,7 @@ country={Brasil}}
             \item[Turbina] É preciso informar a necessidade de gás combustível em função da demanda energética, para então poder fazer os cálculos de emissão de $CO_2$.
         \end{description}
 
-        Como os elementos do sistema integrado foram implementados como objetos, o uso de uma formulação implícita para resolver todo o problema levaria a uma revisão do conceito de objetos. Desta forma, o acoplamento do reservatório com os equipamentos de produção foi feita de forma explícita. Dadas as limitações dos diferentes objetos implementados, o único cálculo que é feito iterativamente é o do ponto de operação do produtor. Todos os cálculos de balanço de gás e demanda energética são feitos após a definição do ponto de operação.
+        Como os elementos do sistema integrado foram implementados como objetos, o uso de uma formulação implícita para resolver todo o problema levaria a uma revisão do conceito de classes e objetos. Desta forma, o acoplamento do reservatório com os equipamentos de produção foi feita de forma explícita. Dadas as limitações das diferentes classes implementados, o único cálculo que é feito iterativamente é o do ponto de operação do produtor. Os cálculos de balanço de gás e demanda energética são feitos a cada passo de tempo, após a definição do ponto de operação.
 
         O balanço de gás assume três destinos para o gás produzido: perdas (\emph{flare}), gás combustível e exportação. As perdas são estimadas como uma fração do gás produzido. A exportação de gás é o gás produzido menos perdas e gás combustível. O balanço é feito de forma incremental:
 
@@ -596,24 +596,24 @@ country={Brasil}}
             \label{fig:pwhinjsens}
         \end{figure}
 
-        Teste com variação no diâmetro dos poços.
+        Testes com variação no diâmetro dos poços mostrou que o impacto é maior na pressão de fundo do poço produtor (Figuras \ref{fig:pwfprodsensdiametro}) e na de cabeça do injetor (Figura \ref{fig:pwfinjsensdiametro}). O efeito é moderado reflexo nas emissões (Figura \ref{fig:emissaorelsensdiametro}), em função de menor demanda da bomba de injeção de água.
 
         \begin{figure}[hbt!]
             \begin{tikzpicture}
                 \begin{axis}[
                     grid=both,
                     xlabel = {Tempo [$d$]},
-                    ylabel = {$Pwh_{inj.}\,[bar]$},
-                    legend style={at={(0.65,0.82)}, anchor=east, font=\footnotesize},
+                    ylabel = {$Pwf_{prod.}\,[bar]$},
+                    legend style={font=\footnotesize},
                     ]
-                    \addplot[color=black, solid, thick] table [x=Time_d, y=PwhInj_bar] {results_main.txt};
-                    \addplot[color=red, solid, thick] table [x=Time_d, y=PwhInj_bar] {results_d6_prod.txt};
-                    \addplot[color=green, solid, thick] table [x=Time_d, y=PwhInj_bar] {results_d6_inj.txt};
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_main.txt};
+                    \addplot[color=red, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_d6_prod.txt};
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_d6_inj.txt};
                     \legend{Ambos=$4\,pol$, Prod.=$6\,pol$, Inj.=$6\,pol$};
                 \end{axis}
             \end{tikzpicture}
-            \caption{ relativa em função do incremento de pressão da \emph{ESP}.}
-            % \label{fig:pwhinjsens}
+            \caption{Efeito dos diâmetros dos poços na pressão de fundo do produtor.}
+            \label{fig:pwfprodsensdiametro}
         \end{figure}
 
         \begin{figure}[hbt!]
@@ -622,16 +622,34 @@ country={Brasil}}
                     grid=both,
                     xlabel = {Tempo [$d$]},
                     ylabel = {$Pwh_{inj.}\,[bar]$},
-                    legend style={at={(0.65,0.82)}, anchor=east, font=\footnotesize},
+                    legend style={font=\footnotesize},
                     ]
-                    \addplot[color=black, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_main.txt};
-                    \addplot[color=red, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_d6_prod.txt};
-                    \addplot[color=green, solid, thick] table [x=Time_d, y=PwfProd_bar] {results_d6_inj.txt};
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=PwhInj_bar] {results_main.txt};
+                    \addplot[color=red, solid, thick] table [x=Time_d, y=PwhInj_bar] {results_d6_prod.txt};
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=PwhInj_bar] {results_d6_inj.txt};
                     \legend{Ambos=$4\,pol$, Prod.=$6\,pol$, Inj.=$6\,pol$};
                 \end{axis}
             \end{tikzpicture}
-            \caption{ relativa em função do incremento de pressão da \emph{ESP}.}
-            % \label{fig:pwhinjsens}
+            \caption{Efeito dos diâmetros dos poços na pressão de cabeça do injetor.}
+            \label{fig:pwfinjsensdiametro}
+        \end{figure}
+
+        \begin{figure}[hbt!]
+            \begin{tikzpicture}
+                \begin{axis}[
+                    grid=both,
+                    xlabel = {Tempo [$d$]},
+                    ylabel = {Emissão [$kgCO_2/boe$]},
+                    legend style={at={(0.65,0.82)}, anchor=east, font=\footnotesize},
+                    ]
+                    \addplot[color=black, solid, thick] table [x=Time_d, y=RelEmission_kgCO2/boe] {results_main.txt};
+                    \addplot[color=red, solid, thick] table [x=Time_d, y=RelEmission_kgCO2/boe] {results_d6_prod.txt};
+                    \addplot[color=green, solid, thick] table [x=Time_d, y=RelEmission_kgCO2/boe] {results_d6_inj.txt};
+                    \legend{Ambos=$4\,pol$, Prod.=$6\,pol$, Inj.=$6\,pol$};
+                \end{axis}
+            \end{tikzpicture}
+            \caption{Efeito dos diâmetros dos poços na emissão de $CO_2$.}
+            \label{fig:emissaorelsensdiametro}
         \end{figure}
 
         Em face do impacto do uso de diesel para gerar a energia que o gás disponível não consegue atender, foi avaliado o impacto de usar outras fontes de energia. Uma opção é o uso de diesel verde. Uma página do Departamento de Energia dos Estados Unidos\cite{USDepEnergy} cita dois estudos que apontam para reduções entre 5 e 65\% na quantidade de $CO_2$ emitido pela queima de diesel. Também foi avaliado o impacto do uso de energia de fontes renováveis. Assumiu-se emissões nulas ao usar energia eólica. Observa-se que o impacto nas emissões é significativo (Figura \ref{fig:emissaorelsens}).
@@ -658,8 +676,8 @@ country={Brasil}}
         O código foi implementado em Python e pode ser encontrado em \href{https://github.com/TiagoCAAmorim/IntegratedModel/}{https://github.com/TiagoCAAmorim/Integra tedModel/}.
 
     \section{Conclusão}
-        Foi implementado um conjunto de objetos que representam diferentes sistemas de um modelo integrado. O acoplamento realizado se mostrou suficiente para as análises pretendidas.
-        Os resultados mostraram que é preciso avaliar as decisões de projeto com vista não somente na recuperação de óleo, mas também em termos de emissões.
+        Foi implementado um conjunto de classes que representam diferentes sistemas de um modelo integrado. O acoplamento realizado se mostrou suficiente para as análises pretendidas.
+        Os resultados mostraram que é preciso avaliar as decisões de projeto com vista não somente na recuperação de óleo, mas também em termos de emissões de $CO_2$.
 
     % \label{}
 
